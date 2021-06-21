@@ -1,0 +1,69 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "ADF-PLTDEV-SRPT01"
+		},
+		"LS_AzureSQDb_Admin_connectionString": {
+			"value": ""
+		},
+		"LS_AzureSQLDb_connectionString": {
+			"value": ""
+		},
+		"LS_BoxFTP_password": {
+			"value": ""
+		},
+		"LS_SAP_password": {
+			"value": ""
+		},
+		"LS_SFTP_Source_AFTPPL01_password": {
+			"value": ""
+		},
+		"LS_SourceSFTP_password": {
+			"value": ""
+		},
+		"LS_BoxFTP_properties_typeProperties_host": {
+			"value": "ftp.box.com"
+		},
+		"LS_BoxFTP_properties_typeProperties_userName": {
+			"value": "ajita.sharma@clorox.com"
+		},
+		"LS_SAP_properties_typeProperties_clientId": {
+			"value": "300"
+		},
+		"LS_SAP_properties_typeProperties_userName": {
+			"value": "BP3ADF"
+		},
+		"LS_SAP_properties_typeProperties_server": {
+			"value": "sbwpvl01.clorox.com"
+		},
+		"LS_SAP_properties_typeProperties_systemNumber": {
+			"value": "00"
+		},
+		"LS_SFTP_Source_AFTPPL01_properties_typeProperties_host": {
+			"value": "168.189.8.46"
+		},
+		"LS_SFTP_Source_AFTPPL01_properties_typeProperties_userName": {
+			"value": "svcrndreporting"
+		},
+		"LS_SR_ABLB_properties_typeProperties_serviceEndpoint": {
+			"value": "https://stpltdevsrpt01.blob.core.windows.net"
+		},
+		"LS_SR_ADLS_properties_typeProperties_url": {
+			"value": "https://stpltdevsrpt01.dfs.core.windows.net"
+		},
+		"LS_SourceSFTP_properties_typeProperties_host": {
+			"value": "168.189.8.46"
+		},
+		"LS_SourceSFTP_properties_typeProperties_userId": {
+			"value": "Svcrndreporting"
+		},
+		"CLX-IR-AZURE-01-Linked_properties_typeProperties_linkedInfo_resourceId": {
+			"value": "/subscriptions/bf940dcb-0af5-4597-a54e-1aa5d3cc0b38/resourcegroups/RG-ITPROD-ITSERV01/providers/Microsoft.DataFactory/factories/ADF-ITPROD-IRSERV01/integrationruntimes/CLX-IR-AZURE-01"
+		},
+		"CLX-IR-ONPREM-01-Linked_properties_typeProperties_linkedInfo_resourceId": {
+			"value": "/subscriptions/bf940dcb-0af5-4597-a54e-1aa5d3cc0b38/resourcegroups/RG-ITPROD-ITSERV01/providers/Microsoft.DataFactory/factories/ADF-ITPROD-IRSERV01/integrationruntimes/CLX-IR-ONPREM-01"
+		}
+	}
+}

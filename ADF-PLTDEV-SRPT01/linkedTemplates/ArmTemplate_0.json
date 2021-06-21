@@ -1,0 +1,838 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "ADF-PLTDEV-SRPT01"
+		},
+		"LS_AzureSQDb_Admin_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'LS_AzureSQDb_Admin'"
+		},
+		"LS_AzureSQLDb_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'LS_AzureSQLDb'"
+		},
+		"LS_BoxFTP_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'LS_BoxFTP'"
+		},
+		"LS_SAP_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'LS_SAP'"
+		},
+		"LS_SFTP_Source_AFTPPL01_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'LS_SFTP_Source_AFTPPL01'"
+		},
+		"LS_SourceSFTP_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'LS_SourceSFTP'"
+		},
+		"CLX-IR-AZURE-01-Linked_properties_typeProperties_linkedInfo_resourceId": {
+			"type": "string",
+			"defaultValue": "/subscriptions/bf940dcb-0af5-4597-a54e-1aa5d3cc0b38/resourcegroups/RG-ITPROD-ITSERV01/providers/Microsoft.DataFactory/factories/ADF-ITPROD-IRSERV01/integrationruntimes/CLX-IR-AZURE-01"
+		},
+		"CLX-IR-ONPREM-01-Linked_properties_typeProperties_linkedInfo_resourceId": {
+			"type": "string",
+			"defaultValue": "/subscriptions/bf940dcb-0af5-4597-a54e-1aa5d3cc0b38/resourcegroups/RG-ITPROD-ITSERV01/providers/Microsoft.DataFactory/factories/ADF-ITPROD-IRSERV01/integrationruntimes/CLX-IR-ONPREM-01"
+		},
+		"LS_BoxFTP_properties_typeProperties_host": {
+			"type": "string",
+			"defaultValue": "ftp.box.com"
+		},
+		"LS_BoxFTP_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "ajita.sharma@clorox.com"
+		},
+		"LS_SAP_properties_typeProperties_clientId": {
+			"type": "string",
+			"defaultValue": "300"
+		},
+		"LS_SAP_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "BP3ADF"
+		},
+		"LS_SAP_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "sbwpvl01.clorox.com"
+		},
+		"LS_SAP_properties_typeProperties_systemNumber": {
+			"type": "string",
+			"defaultValue": "00"
+		},
+		"LS_SFTP_Source_AFTPPL01_properties_typeProperties_host": {
+			"type": "string",
+			"defaultValue": "168.189.8.46"
+		},
+		"LS_SFTP_Source_AFTPPL01_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "svcrndreporting"
+		},
+		"LS_SourceSFTP_properties_typeProperties_host": {
+			"type": "string",
+			"defaultValue": "168.189.8.46"
+		},
+		"LS_SourceSFTP_properties_typeProperties_userId": {
+			"type": "string",
+			"defaultValue": "Svcrndreporting"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/CLX-IR-AZURE-01-Linked')]",
+			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "SelfHosted",
+				"typeProperties": {
+					"linkedInfo": {
+						"resourceId": "[parameters('CLX-IR-AZURE-01-Linked_properties_typeProperties_linkedInfo_resourceId')]",
+						"authorizationType": "Rbac"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/CLX-IR-ONPREM-01-Linked')]",
+			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "SelfHosted",
+				"typeProperties": {
+					"linkedInfo": {
+						"resourceId": "[parameters('CLX-IR-ONPREM-01-Linked_properties_typeProperties_linkedInfo_resourceId')]",
+						"authorizationType": "Rbac"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/default')]",
+			"type": "Microsoft.DataFactory/factories/managedVirtualNetworks",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"preventDataExfiltration": false
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_AzureSQDb_Admin')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"connectionString": "[parameters('LS_AzureSQDb_Admin_connectionString')]"
+				},
+				"connectVia": {
+					"referenceName": "CLX-IR-ONPREM-01-Linked",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/CLX-IR-ONPREM-01-Linked')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_AzureSQLDb')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"connectionString": "[parameters('LS_AzureSQLDb_connectionString')]"
+				},
+				"connectVia": {
+					"referenceName": "CLX-IR-ONPREM-01-Linked",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/CLX-IR-ONPREM-01-Linked')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_BoxFTP')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "FtpServer",
+				"typeProperties": {
+					"host": "[parameters('LS_BoxFTP_properties_typeProperties_host')]",
+					"port": 21,
+					"enableSsl": false,
+					"enableServerCertificateValidation": false,
+					"authenticationType": "Basic",
+					"userName": "[parameters('LS_BoxFTP_properties_typeProperties_userName')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('LS_BoxFTP_password')]"
+					}
+				},
+				"connectVia": {
+					"referenceName": "CLX-IR-AZURE-01-Linked",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/CLX-IR-AZURE-01-Linked')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_SAP')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "SapTable",
+				"typeProperties": {
+					"clientId": "[parameters('LS_SAP_properties_typeProperties_clientId')]",
+					"language": "",
+					"sncMode": false,
+					"userName": "[parameters('LS_SAP_properties_typeProperties_userName')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('LS_SAP_password')]"
+					},
+					"server": "[parameters('LS_SAP_properties_typeProperties_server')]",
+					"systemNumber": "[parameters('LS_SAP_properties_typeProperties_systemNumber')]"
+				},
+				"connectVia": {
+					"referenceName": "CLX-IR-ONPREM-01-Linked",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/CLX-IR-ONPREM-01-Linked')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_SFTP_Source_AFTPPL01')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "Sftp",
+				"typeProperties": {
+					"host": "[parameters('LS_SFTP_Source_AFTPPL01_properties_typeProperties_host')]",
+					"port": 22,
+					"skipHostKeyValidation": true,
+					"authenticationType": "Basic",
+					"userName": "[parameters('LS_SFTP_Source_AFTPPL01_properties_typeProperties_userName')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('LS_SFTP_Source_AFTPPL01_password')]"
+					}
+				},
+				"connectVia": {
+					"referenceName": "CLX-IR-ONPREM-01-Linked",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/CLX-IR-ONPREM-01-Linked')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_SourceSFTP')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "FileServer",
+				"typeProperties": {
+					"host": "[parameters('LS_SourceSFTP_properties_typeProperties_host')]",
+					"userId": "[parameters('LS_SourceSFTP_properties_typeProperties_userId')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('LS_SourceSFTP_password')]"
+					}
+				},
+				"connectVia": {
+					"referenceName": "CLX-IR-ONPREM-01-Linked",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/CLX-IR-ONPREM-01-Linked')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AutoResolveIntegrationRuntime')]",
+			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "Managed",
+				"typeProperties": {
+					"computeProperties": {
+						"location": "AutoResolve",
+						"dataFlowProperties": {
+							"computeType": "General",
+							"coreCount": 8,
+							"timeToLive": 0
+						}
+					}
+				},
+				"managedVirtualNetwork": {
+					"type": "ManagedVirtualNetworkReference",
+					"referenceName": "default"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/managedVirtualNetworks/default')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_Fail_Alert')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "SP_Job_Run_Status_Fail",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[Rnd].[USP_Insert_Job_Run]",
+							"storedProcedureParameters": {
+								"Action": {
+									"value": {
+										"value": "@pipeline().parameters.action_update",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"ADF_Name": {
+									"value": {
+										"value": "@pipeline().DataFactory",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"Execution_Status": {
+									"value": {
+										"value": "@pipeline().parameters.run_status_fail",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"file_transfer_flag": {
+									"value": {
+										"value": "@pipeline().parameters.file_transfer_flag",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"job_key": {
+									"value": {
+										"value": "@pipeline().parameters.job_key",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"job_start_date_time": {
+									"value": {
+										"value": "@pipeline().TriggerTime",
+										"type": "Expression"
+									},
+									"type": "DateTime"
+								},
+								"last_update_date": {
+									"value": {
+										"value": "@pipeline().TriggerTime",
+										"type": "Expression"
+									},
+									"type": "DateTime"
+								},
+								"Pipeline_Name": {
+									"value": {
+										"value": "@pipeline().Pipeline",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"Pipeline_Start_Time": {
+									"value": {
+										"value": "@pipeline().TriggerTime",
+										"type": "Expression"
+									},
+									"type": "DateTime"
+								},
+								"PL_Run_ID": {
+									"value": {
+										"value": "@pipeline().RunId",
+										"type": "Expression"
+									},
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_AzureSQDb_Admin",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Web1",
+						"type": "WebActivity",
+						"dependsOn": [
+							{
+								"activity": "SP_Job_Run_Status_Fail",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"url": {
+								"value": "@pipeline().globalParameters.failure_mail_url",
+								"type": "Expression"
+							},
+							"connectVia": {
+								"referenceName": "AutoResolveIntegrationRuntime",
+								"type": "IntegrationRuntimeReference"
+							},
+							"method": "POST",
+							"headers": {},
+							"body": {
+								"value": "{\n \"Project\" : \"@{pipeline().globalParameters.project_name}\",\n \"Module Name\" : \"pipeline().parameters.job_name\",\n \"Environment\" : \"@{pipeline().globalParameters.environment}\",\n \"Title\":\"Pipeline Execution Failed\",\n \"Pipeline Run ID\" : \"@{pipeline().RunId}\",\n \"Pipeline Trigger ID\" : \"@{pipeline().TriggerId}\",\n \"Pipeline Name\" : \"@{pipeline().Pipeline}\",\n \"Data Factory Name \" : \"@{pipeline().DataFactory}\",\n \"Pipeline Trigger Time\" :\"@{pipeline().TriggerTime}\",\n \"Pipeline Failure Time\" : \"@{utcnow()}\",\n \"Recipients\" : \"@{pipeline().globalParameters.mail_notification_recipient}\",\n}",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"parameters": {
+					"action_update": {
+						"type": "string",
+						"defaultValue": "update"
+					},
+					"run_status_fail": {
+						"type": "string",
+						"defaultValue": "Failed"
+					},
+					"file_transfer_flag": {
+						"type": "string",
+						"defaultValue": "N"
+					},
+					"job_key": {
+						"type": "string"
+					},
+					"email_url": {
+						"type": "string",
+						"defaultValue": "https://prod-51.eastus2.logic.azure.com:443/workflows/ceda425476814f708eb7cc9d5367112a/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=VK3vUyZ1Fxy6PdExFQAekhkbehfXiU6f9tEztB4qy-c"
+					},
+					"job_name": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "PL_ClOROX_SR"
+				},
+				"annotations": [],
+				"lastPublishTime": "2021-06-17T11:04:51Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_AzureSQDb_Admin')]",
+				"[concat(variables('factoryId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_Success_Mail')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Success mail",
+						"type": "WebActivity",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"url": {
+								"value": "@pipeline().globalParameters.success_mail_url",
+								"type": "Expression"
+							},
+							"connectVia": {
+								"referenceName": "AutoResolveIntegrationRuntime",
+								"type": "IntegrationRuntimeReference"
+							},
+							"method": "POST",
+							"headers": {},
+							"body": {
+								"value": "{\n  \"title\":\"Pipeline Execution Successfull\",\n  \"message\":\"Pipeline has been executed successfully\",\n  \"pipeline run id\":\"@{pipeline().RunId}\"\n}",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"parameters": {
+					"url": {
+						"type": "string",
+						"defaultValue": "https://prod-51.eastus2.logic.azure.com:443/workflows/ceda425476814f708eb7cc9d5367112a/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=VK3vUyZ1Fxy6PdExFQAekhkbehfXiU6f9tEztB4qy-c"
+					}
+				},
+				"folder": {
+					"name": "PL_ClOROX_SR"
+				},
+				"annotations": [],
+				"lastPublishTime": "2021-06-21T07:38:39Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_email')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Web1",
+						"type": "WebActivity",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"url": {
+								"value": "@pipeline().globalParameters.pipeline_execution_failed_url",
+								"type": "Expression"
+							},
+							"connectVia": {
+								"referenceName": "AutoResolveIntegrationRuntime",
+								"type": "IntegrationRuntimeReference"
+							},
+							"method": "POST",
+							"headers": {},
+							"body": {
+								"value": "{\n  \"title\":\"Pipeline Execution Failed\",\n  \"message\":\"Pipeline Execution Failed\",\n  \"pipeline run id\":\"@{pipeline().RunId}\"\n}",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"parameters": {
+					"email_url": {
+						"type": "string",
+						"defaultValue": "https://prod-51.eastus2.logic.azure.com:443/workflows/ceda425476814f708eb7cc9d5367112a/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=VK3vUyZ1Fxy6PdExFQAekhkbehfXiU6f9tEztB4qy-c"
+					}
+				},
+				"folder": {
+					"name": "PL_ClOROX_SR"
+				},
+				"annotations": [],
+				"lastPublishTime": "2021-06-16T07:40:55Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_FTP_All_Files')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_BoxFTP",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"directory": {
+						"type": "string"
+					},
+					"file": {
+						"type": "string"
+					},
+					"sheet_name": {
+						"type": "string"
+					},
+					"range": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "DS_CLOROX_SR"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": {
+						"value": "@dataset().sheet_name",
+						"type": "Expression"
+					},
+					"location": {
+						"type": "FtpServerLocation",
+						"fileName": {
+							"value": "@dataset().file",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().directory",
+							"type": "Expression"
+						}
+					},
+					"range": {
+						"value": "@dataset().range",
+						"type": "Expression"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_BoxFTP')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_FTP_Excel_Files')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_BoxFTP",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"directory": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "DS_CLOROX_SR"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "FtpServerLocation",
+						"folderPath": {
+							"value": "@dataset().directory",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_BoxFTP')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_FTP_Files')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_BoxFTP",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"directory": {
+						"type": "string"
+					},
+					"sheet_name": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "DS_CLOROX_SR"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": {
+						"value": "@dataset().sheet_name",
+						"type": "Expression"
+					},
+					"location": {
+						"type": "FtpServerLocation",
+						"folderPath": {
+							"value": "@dataset().directory",
+							"type": "Expression"
+						}
+					}
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_BoxFTP')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_FTP_SAP')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_BoxFTP",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"directory": {
+						"type": "string"
+					},
+					"file": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "DS_CLOROX_SR"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "FtpServerLocation",
+						"fileName": {
+							"value": "@dataset().file",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().directory",
+							"type": "Expression"
+						}
+					},
+					"columnDelimiter": ";",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "\"\"\"Customer number\"\"\"CUSTOMER:/BI0/OICUSTOMER;\"\"\"Customer Description\"\"\"CUST_DESC:/BI0/OINAME;\"\"\"Corporate - CustHier1\"\"\"CUST_HIE01:/BI0/OICUST_HIE01;\"\"\"Corp CustHier1 Description\"\"\"CUSTOMER_HIER1:/BI0/OINAME2;\"\"\"Subsidiary - CustHier2\"\"\"CUST_HIE02:/BI0/OICUST_HIE02;\"\"\"Subs CustHier2 Description\"\"\"CUSTOMER_HIER2:/BI0/OINAME3;\"\"\"Reg/Div - CustHier3\"\"\"CUST_HIE03:/BI0/OICUST_HIE03;\"\"\"reg CustHier3 Description\"\"\"CUSTOMER_HIER3:/BI0/OINAME40;\"\"\"Broker\"\"\"BROKER:/BIC/OIZBROKER;\"\"\"Broker Description\"\"\"BRKR_DESC:/BIC/OINAME5;\"\"\"Profit Center\"\"\"PROFIT_CTR:/BI0/OIPROFIT_CTR;\"\"\"Profit Center Description\"\"\"PRFT_CTR:RSTXTMD;\"\"\"Material\"\"\"MATERIAL:/BI0/OIMATERIAL;\"\"\"Material Description\"\"\"MAT_DESC:/BIC/OINAME4;\"\"\"Division\"\"\"DIVISION:/BI0/OIDIVISION;\"\"\"Material Division Description\"\"\"MAT_DIVISION:RSTXTSH;\"\"\"Global Category\"\"\"PRODH1:/BI0/OIPRODH1;\"\"\"Global Category Description\"\"\"GC_DESC:/BIC/OINAME6;\"\"\"Brand\"\"\"PRODH2:/BI0/OIPRODH2;\"\"\"Brand Description\"\"\"BRAND_DESC:/BIC/OINAME7;\"\"\"Purpose\"\"\"PRODH3:/BI0/OIPRODH3;\"\"\"Purpose Description\"\"\"PUR_DESC:/BIC/OINAME8;\"\"\"Type\"\"\"PRODH4:/BI0/OIPRODH4;\"\"\"Type Description\"\"\"TYPE_DESC:/BIC/OINAME9;\"\"\"Package Size\"\"\"PRODH5:/BI0/OIPRODH5;\"\"\"Pack Size Description\"\"\"PS_DESC:/BIC/OINAME10;\"\"\"European Article Numbers/Universal Product Code\"\"\"EANUPC:/BI0/OIEANUPC;\"\"\"Region in Sales Dept Hierarchy\"\"\"/BIC/ZSLS_REGN:/BIC/OIZSLS_REGN;\"\"\"Region Description\"\"\"REGION_DESC:/BIC/OINAME11;\"\"\"Sales Organization\"\"\"SALESORG:/BI0/OISALESORG;\"\"\"Sales Org Description\"\"\"SORG_DESC:/BIC/OINAME12;\"\"\"Trade Sector\"\"\"CUST_GRP5:/BI0/OICUST_GRP5;\"\"\"Trade Sector Description\"\"\"TSEC_DESC:/BIC/OINAME13;\"\"\"Country key\"\"\"COUNTRY:/BI0/OICOUNTRY;\"\"\"Country Description\"\"\"CTRY_DESC:/BIC/OINAME14;\"\"\"Sales Department in Sales Dept Hierarchy\"\"\"/BIC/ZSLS_DEPT:/BIC/OIZSLS_DEPT;\"\"\"Sales Department Description\"\"\"SLS_DEPT_DESC:/BIC/OINAME15;\"\"\"Sector in Sales Dept Hierarchy\"\"\"/BIC/ZSECTOR:/BIC/OIZSECTOR;\"\"\"Sector Description\"\"\"SCTR_DESC:/BIC/OINAME16;\"\"\"Controlling area\"\"\"CO_AREA:/BI0/OICO_AREA;\"\"\"Controlling Area Description\"\"\"COAREA_DESC:/BIC/OINAME17;\"\"\"Distribution Channel\"\"\"DISTR_CHAN:/BI0/OIDISTR_CHAN;\"\"\"Distribution Channel Description\"\"\"DC_DESC:/BIC/OINAME18;\"\"\"Calendar Year\"\"\"CALYEAR:/BI0/OICALYEAR;\"\"\"Calendar Year/Month\"\"\"CALMONTH:/BI0/OICALMONTH;\"\"\"Calendar Month\"\"\"CALMONTH2:/BI0/OICALMONTH2;\"\"\"Fiscal year\"\"\"FISCYEAR:/BI0/OIFISCYEAR;\"\"\"Posting period\"\"\"FISCPER3:/BI0/OIFISCPER3;\"\"\"Fiscal year variant\"\"\"FISCVARNT:/BI0/OIFISCVARNT;\"\"\"Base Unit of Measure\"\"\"BASE_UOM:/BI0/OIBASE_UOM;\"\"\"Quantity in base units of measure\"\"\"QUANT_B:/BI0/OIQUANT_B;\"\"\"Base Unit of Measure\"\"\"BASE_UOM2:/BI0/OIBASE_UOM2;\"\"\"DOS Quantity\"\"\"/BIC/ZDOS_QTY:/BIC/OIZDOS_QTY;\"\"\"Statistics Currency\"\"\"STAT_CURR:/BI0/OISTAT_CURR;\"\"\"Net value in statistics currency\"\"\"NET_VAL_S:/BI0/OINET_VAL_S",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_BoxFTP')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_FTP_SAP_Files')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_BoxFTP",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"directory": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "DS_CLOROX_SR"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "FtpServerLocation",
+						"folderPath": {
+							"value": "@dataset().directory",
+							"type": "Expression"
+						}
+					},
+					"columnDelimiter": ";",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "\"\"\"Customer number\"\"\"CUSTOMER:/BI0/OICUSTOMER;\"\"\"Customer Description\"\"\"CUST_DESC:/BI0/OINAME;\"\"\"Corporate - CustHier1\"\"\"CUST_HIE01:/BI0/OICUST_HIE01;\"\"\"Corp CustHier1 Description\"\"\"CUSTOMER_HIER1:/BI0/OINAME2;\"\"\"Subsidiary - CustHier2\"\"\"CUST_HIE02:/BI0/OICUST_HIE02;\"\"\"Subs CustHier2 Description\"\"\"CUSTOMER_HIER2:/BI0/OINAME3;\"\"\"Reg/Div - CustHier3\"\"\"CUST_HIE03:/BI0/OICUST_HIE03;\"\"\"reg CustHier3 Description\"\"\"CUSTOMER_HIER3:/BI0/OINAME40;\"\"\"Broker\"\"\"BROKER:/BIC/OIZBROKER;\"\"\"Broker Description\"\"\"BRKR_DESC:/BIC/OINAME5;\"\"\"Profit Center\"\"\"PROFIT_CTR:/BI0/OIPROFIT_CTR;\"\"\"Profit Center Description\"\"\"PRFT_CTR:RSTXTMD;\"\"\"Material\"\"\"MATERIAL:/BI0/OIMATERIAL;\"\"\"Material Description\"\"\"MAT_DESC:/BIC/OINAME4;\"\"\"Division\"\"\"DIVISION:/BI0/OIDIVISION;\"\"\"Material Division Description\"\"\"MAT_DIVISION:RSTXTSH;\"\"\"Global Category\"\"\"PRODH1:/BI0/OIPRODH1;\"\"\"Global Category Description\"\"\"GC_DESC:/BIC/OINAME6;\"\"\"Brand\"\"\"PRODH2:/BI0/OIPRODH2;\"\"\"Brand Description\"\"\"BRAND_DESC:/BIC/OINAME7;\"\"\"Purpose\"\"\"PRODH3:/BI0/OIPRODH3;\"\"\"Purpose Description\"\"\"PUR_DESC:/BIC/OINAME8;\"\"\"Type\"\"\"PRODH4:/BI0/OIPRODH4;\"\"\"Type Description\"\"\"TYPE_DESC:/BIC/OINAME9;\"\"\"Package Size\"\"\"PRODH5:/BI0/OIPRODH5;\"\"\"Pack Size Description\"\"\"PS_DESC:/BIC/OINAME10;\"\"\"European Article Numbers/Universal Product Code\"\"\"EANUPC:/BI0/OIEANUPC;\"\"\"Region in Sales Dept Hierarchy\"\"\"/BIC/ZSLS_REGN:/BIC/OIZSLS_REGN;\"\"\"Region Description\"\"\"REGION_DESC:/BIC/OINAME11;\"\"\"Sales Organization\"\"\"SALESORG:/BI0/OISALESORG;\"\"\"Sales Org Description\"\"\"SORG_DESC:/BIC/OINAME12;\"\"\"Trade Sector\"\"\"CUST_GRP5:/BI0/OICUST_GRP5;\"\"\"Trade Sector Description\"\"\"TSEC_DESC:/BIC/OINAME13;\"\"\"Country key\"\"\"COUNTRY:/BI0/OICOUNTRY;\"\"\"Country Description\"\"\"CTRY_DESC:/BIC/OINAME14;\"\"\"Sales Department in Sales Dept Hierarchy\"\"\"/BIC/ZSLS_DEPT:/BIC/OIZSLS_DEPT;\"\"\"Sales Department Description\"\"\"SLS_DEPT_DESC:/BIC/OINAME15;\"\"\"Sector in Sales Dept Hierarchy\"\"\"/BIC/ZSECTOR:/BIC/OIZSECTOR;\"\"\"Sector Description\"\"\"SCTR_DESC:/BIC/OINAME16;\"\"\"Controlling area\"\"\"CO_AREA:/BI0/OICO_AREA;\"\"\"Controlling Area Description\"\"\"COAREA_DESC:/BIC/OINAME17;\"\"\"Distribution Channel\"\"\"DISTR_CHAN:/BI0/OIDISTR_CHAN;\"\"\"Distribution Channel Description\"\"\"DC_DESC:/BIC/OINAME18;\"\"\"Calendar Year\"\"\"CALYEAR:/BI0/OICALYEAR;\"\"\"Calendar Year/Month\"\"\"CALMONTH:/BI0/OICALMONTH;\"\"\"Calendar Month\"\"\"CALMONTH2:/BI0/OICALMONTH2;\"\"\"Fiscal year\"\"\"FISCYEAR:/BI0/OIFISCYEAR;\"\"\"Posting period\"\"\"FISCPER3:/BI0/OIFISCPER3;\"\"\"Fiscal year variant\"\"\"FISCVARNT:/BI0/OIFISCVARNT;\"\"\"Base Unit of Measure\"\"\"BASE_UOM:/BI0/OIBASE_UOM;\"\"\"Quantity in base units of measure\"\"\"QUANT_B:/BI0/OIQUANT_B;\"\"\"Base Unit of Measure\"\"\"BASE_UOM2:/BI0/OIBASE_UOM2;\"\"\"DOS Quantity\"\"\"/BIC/ZDOS_QTY:/BIC/OIZDOS_QTY;\"\"\"Statistics Currency\"\"\"STAT_CURR:/BI0/OISTAT_CURR;\"\"\"Net value in statistics currency\"\"\"NET_VAL_S:/BI0/OINET_VAL_S",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_BoxFTP')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_LND_STG_ADMIN')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_AzureSQDb_Admin",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "DS_CLOROX_SR"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_AzureSQDb_Admin')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_SAPDataTable')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_SAP",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "DS_CLOROX_SR"
+				},
+				"annotations": [],
+				"type": "SapTableResource",
+				"schema": [],
+				"typeProperties": {
+					"tableName": "/BIC/AZSD_SALS00"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_SAP')]"
+			]
+		}
+	]
+}
