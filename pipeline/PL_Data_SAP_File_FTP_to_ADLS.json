@@ -1,0 +1,122 @@
+{
+	"name": "PL_Data_SAP_File_FTP_to_ADLS",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get_Files_Details",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "DS_FTP_SAP_Files",
+						"type": "DatasetReference",
+						"parameters": {
+							"directory": {
+								"value": "@pipeline().globalParameters.directory_ftp_sap",
+								"type": "Expression"
+							}
+						}
+					},
+					"fieldList": [
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "FtpReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false,
+						"useBinaryTransfer": false
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "ForEach1",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get_Files_Details",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get_Files_Details').output.childitems",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "Set variable1",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "v_file_name",
+								"value": {
+									"value": "@item().name",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "Execute Pipeline1",
+							"type": "ExecutePipeline",
+							"dependsOn": [
+								{
+									"activity": "Set variable1",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "PL_Data_SAP_File_FTP_Landing_to_Raw_Directory",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"file_name": {
+										"value": "@variables('v_file_name')",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"directory_ftp_sap": {
+				"type": "string",
+				"defaultValue": "SAP Data"
+			}
+		},
+		"variables": {
+			"v_file_name": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "PL_ClOROX_SR"
+		},
+		"annotations": [],
+		"lastPublishTime": "2021-06-18T15:01:31Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

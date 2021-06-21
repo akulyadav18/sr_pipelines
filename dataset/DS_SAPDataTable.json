@@ -1,0 +1,19 @@
+{
+	"name": "DS_SAPDataTable",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_SAP",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "DS_CLOROX_SR"
+		},
+		"annotations": [],
+		"type": "SapTableResource",
+		"schema": [],
+		"typeProperties": {
+			"tableName": "/BIC/AZSD_SALS00"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

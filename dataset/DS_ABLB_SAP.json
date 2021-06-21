@@ -1,0 +1,43 @@
+{
+	"name": "DS_ABLB_SAP",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_SR_ABLB",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"container": {
+				"type": "string",
+				"defaultValue": "clx-datalake"
+			},
+			"directory": {
+				"type": "string",
+				"defaultValue": "Raw/RnD/SAP"
+			}
+		},
+		"folder": {
+			"name": "DS_CLOROX_SR"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"folderPath": {
+					"value": "@dataset().directory",
+					"type": "Expression"
+				},
+				"container": {
+					"value": "@dataset().container",
+					"type": "Expression"
+				}
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

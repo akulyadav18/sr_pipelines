@@ -1,0 +1,143 @@
+{
+	"name": "DS_SQL_EBOM_LND",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_AzureSQDb_Admin",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"table": {
+				"type": "string",
+				"defaultValue": "lnd_ebom"
+			},
+			"schema": {
+				"type": "string",
+				"defaultValue": "tmp"
+			}
+		},
+		"folder": {
+			"name": "DS_CLOROX_SR"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "ID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Level",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Relation_Name",
+				"type": "nvarchar"
+			},
+			{
+				"name": "From_or_To",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Type",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Part",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "Rev",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Created_Date",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "Last_Modified_Date",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "Description",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Spec",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "Recyclable_Plastic_Weight",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "Recycle_Weight",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "Package_Reuse_Weight",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "Compostable_Weight",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "Plastic_Weight",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "Quantity",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "UOM",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Country_of_Origin",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Certification_Type",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Create_Timestamp",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "Last_Modified_Timestamp",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			}
+		],
+		"typeProperties": {
+			"schema": {
+				"value": "@dataset().schema",
+				"type": "Expression"
+			},
+			"table": {
+				"value": "@dataset().table",
+				"type": "Expression"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,1006 @@
+{
+	"name": "PL_Data_EBOM_Raw_Directory_to_DB_Updated",
+	"properties": {
+		"activities": [
+			{
+				"name": "PF_EBOM_Job_Name",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "job_name_EBOM",
+					"value": {
+						"value": "@variables('job_name_EBOM_value')",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "LKP_Job_Key_EBOM",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "PF_EBOM_Job_Name",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "@concat('select job_key from ' ,pipeline().parameters.schema,'.',pipeline().parameters.table_job_control,' where job_name=''',variables('job_name_EBOM_value'),'''')",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_LND_STG_ADMIN",
+						"type": "DatasetReference"
+					}
+				}
+			},
+			{
+				"name": "LKP_Job_Run_Log_EBOM",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "LKP_Job_Key_EBOM",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderStoredProcedureName": "[Rnd].[USP_Insert_Job_Run]",
+						"storedProcedureParameters": {
+							"ADF_Name": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().DataFactory",
+									"type": "Expression"
+								}
+							},
+							"file_transfer_flag": {
+								"type": "String",
+								"value": {
+									"value": "@variables('file_transfer_flag')",
+									"type": "Expression"
+								}
+							},
+							"job_key": {
+								"type": "String",
+								"value": {
+									"value": "@variables('job_key')",
+									"type": "Expression"
+								}
+							},
+							"job_start_date_time": {
+								"type": "DateTime",
+								"value": {
+									"value": "@pipeline().TriggerTime",
+									"type": "Expression"
+								}
+							},
+							"last_update_date": {
+								"type": "DateTime",
+								"value": {
+									"value": "@pipeline().TriggerTime",
+									"type": "Expression"
+								}
+							},
+							"Pipeline_Name": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().Pipeline",
+									"type": "Expression"
+								}
+							},
+							"Pipeline_Start_Time": {
+								"type": "DateTime",
+								"value": {
+									"value": "@pipeline().TriggerTime",
+									"type": "Expression"
+								}
+							},
+							"PL_Run_ID": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().RunId",
+									"type": "Expression"
+								}
+							},
+							"Action": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.action_insert",
+									"type": "Expression"
+								}
+							},
+							"Execution_Status": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.exec_status",
+									"type": "Expression"
+								}
+							}
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_LND_STG_ADMIN",
+						"type": "DatasetReference"
+					}
+				}
+			},
+			{
+				"name": "Copy_data_Landing_Zone_EBOM_to_Landing_Table",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "LKP_Job_Run_Log_EBOM",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"additionalColumns": [
+							{
+								"name": "ebom_filename",
+								"value": {
+									"value": "@pipeline().parameters.filename_ebom",
+									"type": "Expression"
+								}
+							}
+						],
+						"storeSettings": {
+							"type": "AzureBlobStorageReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
+						}
+					},
+					"sink": {
+						"type": "AzureSqlSink"
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"name": "Level ",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "level",
+									"type": "String",
+									"physicalType": "char"
+								}
+							},
+							{
+								"source": {
+									"name": " RelationName ",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "relation_name",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"name": " From or To ",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "from_or_to",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"name": " Type ",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "material_type",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"name": " Part ",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "material_part",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"name": " Description ",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "material_description",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"name": " Spec ",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "material_specification",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"name": " Quantity ",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "material_quantity",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"name": " UOM ",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "material_uom",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"name": " Division",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "material_division",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"name": " Rev ",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "revision",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"name": " RecyclablePlasticWeight ",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "recyclable_plastic_weight",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"name": " RecycleWeight ",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "recycle_weight",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"name": " PackageReuseWeight ",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "package_reuse_weight",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"name": " CompostableWeight ",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "compostable_weight",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"name": " PlasticWeight ",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "plastic_weight",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"name": " Coutry of Origin ",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "country_of_origin",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"name": " Certification Type",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "certification_type",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"name": " Created Date ",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "created_date",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"name": " Last Modified Date ",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "last_modified_date",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"name": "ebom_filename",
+									"type": "String"
+								},
+								"sink": {
+									"name": "ebom_file_name",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"name": " RecyclablePlasticWeight_UOM ",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "recyclable_plastic_weight_uom",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"name": " RecycleWeight_UOM ",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "recycle_weight_uom",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"name": " PackageReuseWeight_UOM ",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "package_reuse_weight_uom",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"name": " CompostableWeight_UOM ",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "compostable_weight_uom",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"name": " PlasticWeight_UOM ",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "plastic_weight_uom",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							}
+						],
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_ABLB_LZ_LT",
+						"type": "DatasetReference",
+						"parameters": {
+							"container": {
+								"value": "@pipeline().parameters.filesystem_adls",
+								"type": "Expression"
+							},
+							"directory": {
+								"value": "@pipeline().parameters.directory_raw",
+								"type": "Expression"
+							},
+							"file": {
+								"value": "@pipeline().parameters.filename_ebom",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_SQL_Lnd",
+						"type": "DatasetReference",
+						"parameters": {
+							"schema": {
+								"value": "@pipeline().parameters.schema_lnd",
+								"type": "Expression"
+							},
+							"table": {
+								"value": "@pipeline().parameters.table_ebom",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			},
+			{
+				"name": "SP_landing_to_Staging_EBOM",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Copy_data_Landing_Zone_EBOM_to_Landing_Table",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[Rnd].[usp_lnd_to_rnd_ebom]",
+					"storedProcedureParameters": {
+						"file_name": {
+							"value": {
+								"value": "@pipeline().parameters.filename_ebom",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"job_key": {
+							"value": {
+								"value": "@activity('LKP_Job_Key_EBOM').output.firstRow.job_key",
+								"type": "Expression"
+							},
+							"type": "Int64"
+						},
+						"job_run_key": {
+							"value": {
+								"value": "@activity('LKP_Job_Run_Log_EBOM').output.firstRow.job_run_key",
+								"type": "Expression"
+							},
+							"type": "Int64"
+						},
+						"message": {
+							"value": null,
+							"type": "String"
+						},
+						"status": {
+							"value": null,
+							"type": "Int32"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_AzureSQDb_Admin",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Execute_Staging_to_Curated_Pipeline_EBOM",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "LKP_Job_File_Log_EBOM",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_Tran_EBOM_Staging_Table_to_Curated_ADLS_Updated",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"job_run_key": {
+							"value": "@activity('LKP_Job_Run_Log_EBOM').output.firstRow.job_run_key",
+							"type": "Expression"
+						},
+						"filename": {
+							"value": "@pipeline().parameters.filename_ebom",
+							"type": "Expression"
+						},
+						"action_insert": {
+							"value": "@pipeline().parameters.action_insert",
+							"type": "Expression"
+						},
+						"exec_status": {
+							"value": "@pipeline().parameters.exec_status",
+							"type": "Expression"
+						},
+						"file_size": {
+							"value": "@pipeline().parameters.filesize_ebom",
+							"type": "Expression"
+						},
+						"job_file_key": {
+							"value": "@pipeline().parameters.job_file_key",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "SP_Job_Run_Status_Pass",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "SP_landing_to_Staging_EBOM",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[Rnd].[USP_Insert_Job_Run]",
+					"storedProcedureParameters": {
+						"Action": {
+							"value": {
+								"value": "@pipeline().parameters.action_update",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"ADF_Name": {
+							"value": {
+								"value": "@pipeline().DataFactory",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"Execution_Status": {
+							"value": {
+								"value": "@pipeline().parameters.run_status_pass",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"file_transfer_flag": {
+							"value": {
+								"value": "@variables('file_transfer_flag')",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"job_key": {
+							"value": {
+								"value": "@activity('LKP_Job_Key_EBOM').output.firstRow.job_key",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"job_start_date_time": {
+							"value": {
+								"value": "@pipeline().TriggerTime",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						},
+						"last_update_date": {
+							"value": {
+								"value": "@pipeline().TriggerTime",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						},
+						"Pipeline_Name": {
+							"value": {
+								"value": "@pipeline().Pipeline",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"Pipeline_Start_Time": {
+							"value": {
+								"value": "@pipeline().TriggerTime",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						},
+						"PL_Run_ID": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_AzureSQDb_Admin",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "LKP_Job_File_Log_EBOM",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "SP_Job_Run_Status_Pass",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderStoredProcedureName": "[Rnd].[USP_Job_File_Log]",
+						"storedProcedureParameters": {
+							"file_location": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.directory_landing",
+									"type": "Expression"
+								}
+							},
+							"file_name": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.filename_ebom",
+									"type": "Expression"
+								}
+							},
+							"file_size": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.filesize_ebom",
+									"type": "Expression"
+								}
+							},
+							"job_key": {
+								"type": "String",
+								"value": {
+									"value": "@activity('LKP_Job_Key_EBOM').output.firstRow.job_key",
+									"type": "Expression"
+								}
+							},
+							"job_run_key": {
+								"type": "String",
+								"value": {
+									"value": "@activity('LKP_Job_Run_Log_EBOM').output.firstRow.job_run_key",
+									"type": "Expression"
+								}
+							},
+							"job_file_key": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.job_file_key",
+									"type": "Expression"
+								}
+							},
+							"datafactory_name": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().DataFactory",
+									"type": "Expression"
+								}
+							},
+							"pipeline_trigger_time": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().TriggerTime",
+									"type": "Expression"
+								}
+							},
+							"pipeline_trigger_id": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().TriggerId",
+									"type": "Expression"
+								}
+							},
+							"pipeline_run_id": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().RunId",
+									"type": "Expression"
+								}
+							},
+							"pipeline_name": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().Pipeline",
+									"type": "Expression"
+								}
+							}
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_LND_STG_ADMIN",
+						"type": "DatasetReference"
+					}
+				}
+			},
+			{
+				"name": "Execute_Fail_Alert",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Copy_data_Landing_Zone_EBOM_to_Landing_Table",
+						"dependencyConditions": [
+							"Failed"
+						]
+					},
+					{
+						"activity": "Execute_Staging_to_Curated_Pipeline_EBOM",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_Fail_Alert",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"job_key": {
+							"value": "@activity('LKP_Job_Key_EBOM').output.firstRow.job_key",
+							"type": "Expression"
+						}
+					}
+				}
+			}
+		],
+		"parameters": {
+			"schema": {
+				"type": "string",
+				"defaultValue": "control_ETL"
+			},
+			"table_job_control": {
+				"type": "string",
+				"defaultValue": "job_control"
+			},
+			"table_job_run_log": {
+				"type": "string",
+				"defaultValue": "job_run_log"
+			},
+			"table_job_file_log": {
+				"type": "string",
+				"defaultValue": "job_file"
+			},
+			"directory_raw": {
+				"type": "string",
+				"defaultValue": "Raw/RnD/PLM/EBOM"
+			},
+			"filesystem_adls": {
+				"type": "string",
+				"defaultValue": "clx-datalake"
+			},
+			"directory_landing": {
+				"type": "string",
+				"defaultValue": "Landing/RnD/PLM/EBOM"
+			},
+			"all_csv_files": {
+				"type": "string",
+				"defaultValue": "*.csv"
+			},
+			"table_ebom": {
+				"type": "string",
+				"defaultValue": "lnd_ebom"
+			},
+			"schema_lnd": {
+				"type": "string",
+				"defaultValue": "tmp"
+			},
+			"action_insert": {
+				"type": "string",
+				"defaultValue": "insert"
+			},
+			"exec_status": {
+				"type": "string",
+				"defaultValue": "In_Progress"
+			},
+			"filename_ebom": {
+				"type": "string"
+			},
+			"filesize_ebom": {
+				"type": "string"
+			},
+			"job_key": {
+				"type": "string"
+			},
+			"job_run_key": {
+				"type": "string"
+			},
+			"action_update": {
+				"type": "string",
+				"defaultValue": "update"
+			},
+			"run_status_pass": {
+				"type": "string",
+				"defaultValue": "Success"
+			},
+			"job_file_key": {
+				"type": "string"
+			}
+		},
+		"variables": {
+			"job_name_EBOM_value": {
+				"type": "String",
+				"defaultValue": "Extract_and_Load_EBOM_LZ_LT"
+			},
+			"job_name_EBOM": {
+				"type": "String"
+			},
+			"job_key": {
+				"type": "String"
+			},
+			"file_transfer_flag": {
+				"type": "String",
+				"defaultValue": "Y"
+			},
+			"job_run_key": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "PL_ClOROX_SR"
+		},
+		"annotations": [],
+		"lastPublishTime": "2021-06-18T14:21:58Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

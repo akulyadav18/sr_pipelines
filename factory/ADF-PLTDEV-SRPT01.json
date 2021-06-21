@@ -1,0 +1,53 @@
+{
+	"name": "ADF-PLTDEV-SRPT01",
+	"properties": {
+		"globalParameters": {
+			"directory_sftp": {
+				"type": "string",
+				"value": "/home/svcrndreporting/"
+			},
+			"directory_sftp_archive": {
+				"type": "string",
+				"value": "/home/svcrndreporting/Archive/"
+			},
+			"directory_ftp_adhoc": {
+				"type": "string",
+				"value": "Sustainability Reporting Manual Update Files"
+			},
+			"directory_ftp_sap": {
+				"type": "string",
+				"value": "SAP Data"
+			},
+			"success_mail_url": {
+				"type": "string",
+				"value": "https://prod-51.eastus2.logic.azure.com:443/workflows/ceda425476814f708eb7cc9d5367112a/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=VK3vUyZ1Fxy6PdExFQAekhkbehfXiU6f9tEztB4qy-c"
+			},
+			"failure_mail_url": {
+				"type": "string",
+				"value": "https://prod-51.eastus2.logic.azure.com:443/workflows/ceda425476814f708eb7cc9d5367112a/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=VK3vUyZ1Fxy6PdExFQAekhkbehfXiU6f9tEztB4qy-c"
+			},
+			"pipeline_execution_failed_url": {
+				"type": "string",
+				"value": "https://prod-51.eastus2.logic.azure.com:443/workflows/ceda425476814f708eb7cc9d5367112a/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=VK3vUyZ1Fxy6PdExFQAekhkbehfXiU6f9tEztB4qy-c"
+			},
+			"environment": {
+				"type": "string",
+				"value": "DEV"
+			},
+			"project_name": {
+				"type": "string",
+				"value": "SR"
+			},
+			"mail_notification_recipient": {
+				"type": "string",
+				"value": "akul.yadav@clorox.com"
+			}
+		}
+	},
+	"location": "eastus2",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "290e11d0-0bef-4b48-b845-89c9457fcb21",
+		"tenantId": "9c272a06-9f0a-43f5-8e40-214a24c5098b"
+	}
+}

@@ -1,0 +1,29 @@
+{
+	"name": "DS_SQL_Material_Type",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_AzureSQDb_Admin",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "DS_CLOROX_SR"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "material_type_categorization",
+				"type": "varchar"
+			},
+			{
+				"name": "part_name",
+				"type": "varchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "Rnd",
+			"table": "material_type"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

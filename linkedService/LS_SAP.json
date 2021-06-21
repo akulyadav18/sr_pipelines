@@ -1,0 +1,21 @@
+{
+	"name": "LS_SAP",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "SapTable",
+		"typeProperties": {
+			"clientId": "300",
+			"language": "",
+			"sncMode": false,
+			"userName": "BP3ADF",
+			"server": "sbwpvl01.clorox.com",
+			"systemNumber": "00",
+			"encryptedCredential": "eyJDcmVkZW50aWFsSWQiOiJmYWJlNzMzNS0xODBiLTQzNDQtYjRkNi1iMzUxNzFlYjE1MWYiLCJWZXJzaW9uIjoiMi4wIiwiQ2xhc3NUeXBlIjoiTWljcm9zb2Z0LkRhdGFQcm94eS5Db3JlLkludGVyU2VydmljZURhdGFDb250cmFjdC5DcmVkZW50aWFsU1UwNkNZMTQifQ=="
+		},
+		"connectVia": {
+			"referenceName": "CLX-IR-ONPREM-01-Linked",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}

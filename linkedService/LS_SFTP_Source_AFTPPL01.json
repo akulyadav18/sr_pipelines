@@ -1,0 +1,20 @@
+{
+	"name": "LS_SFTP_Source_AFTPPL01",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "Sftp",
+		"typeProperties": {
+			"host": "168.189.8.46",
+			"port": 22,
+			"skipHostKeyValidation": true,
+			"authenticationType": "Basic",
+			"userName": "svcrndreporting",
+			"encryptedCredential": "eyJDcmVkZW50aWFsSWQiOiI2YWM0OGEyMy00YTIwLTQ5MjctOGEyZC1mMDkxMTdkYTU2MmIiLCJWZXJzaW9uIjoiMi4wIiwiQ2xhc3NUeXBlIjoiTWljcm9zb2Z0LkRhdGFQcm94eS5Db3JlLkludGVyU2VydmljZURhdGFDb250cmFjdC5DcmVkZW50aWFsU1UwNkNZMTQifQ=="
+		},
+		"connectVia": {
+			"referenceName": "CLX-IR-ONPREM-01-Linked",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}

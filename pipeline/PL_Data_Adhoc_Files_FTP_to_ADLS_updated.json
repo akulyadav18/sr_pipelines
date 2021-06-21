@@ -1,0 +1,142 @@
+{
+	"name": "PL_Data_Adhoc_Files_FTP_to_ADLS_updated",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get_Files_Details",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "DS_FTP_Excel_Files",
+						"type": "DatasetReference",
+						"parameters": {
+							"directory": {
+								"value": "@pipeline().globalParameters.directory_ftp_adhoc",
+								"type": "Expression"
+							}
+						}
+					},
+					"fieldList": [
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "FtpReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false,
+						"useBinaryTransfer": true
+					},
+					"formatSettings": {
+						"type": "BinaryReadSettings"
+					}
+				}
+			},
+			{
+				"name": "ForEach1",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get_Files_Details",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get_Files_Details').output.childitems",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "Set variable1",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "v_file_name",
+								"value": {
+									"value": "@item().name",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "Execute Adhoc Files to DB",
+							"type": "ExecutePipeline",
+							"dependsOn": [
+								{
+									"activity": "Set variable1",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "PL_Data_Adhoc_Files_ADLS_to_DB_updated",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"file_name": {
+										"value": "@variables('v_file_name')",
+										"type": "Expression"
+									}
+								}
+							}
+						},
+						{
+							"name": "Execute_Fail_Alert_ADLS",
+							"type": "ExecutePipeline",
+							"dependsOn": [
+								{
+									"activity": "Execute Adhoc Files to DB",
+									"dependencyConditions": [
+										"Failed"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "PL_email",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"directory_ftp": {
+				"type": "string",
+				"defaultValue": "Sustainability Reporting Manual Update Files"
+			}
+		},
+		"variables": {
+			"v_file_name": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "PL_ClOROX_SR"
+		},
+		"annotations": [],
+		"lastPublishTime": "2021-06-21T07:38:39Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

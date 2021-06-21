@@ -1,0 +1,106 @@
+{
+	"name": "DS_ADLS_PLM_EBOM",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_SR_ADLS",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"filesystem": {
+				"type": "string"
+			},
+			"directory": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "DS_CLOROX_SR"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": {
+					"value": "@dataset().directory",
+					"type": "Expression"
+				},
+				"fileSystem": {
+					"value": "@dataset().filesystem",
+					"type": "Expression"
+				}
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "Column1",
+				"type": "String"
+			},
+			{
+				"name": "Column2",
+				"type": "String"
+			},
+			{
+				"name": "Column3",
+				"type": "String"
+			},
+			{
+				"name": "Type",
+				"type": "String"
+			},
+			{
+				"name": "Part",
+				"type": "String"
+			},
+			{
+				"name": "Rev",
+				"type": "String"
+			},
+			{
+				"name": "Description",
+				"type": "String"
+			},
+			{
+				"name": "Spec",
+				"type": "String"
+			},
+			{
+				"name": "RecyclablePlasticWeight",
+				"type": "String"
+			},
+			{
+				"name": "RecycleWeight",
+				"type": "String"
+			},
+			{
+				"name": "PackageReuseWeight",
+				"type": "String"
+			},
+			{
+				"name": "CompostableWeight",
+				"type": "String"
+			},
+			{
+				"name": "PlasticWeight",
+				"type": "String"
+			},
+			{
+				"name": "Quantity",
+				"type": "String"
+			},
+			{
+				"name": "UOM",
+				"type": "String"
+			},
+			{
+				"name": "None",
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

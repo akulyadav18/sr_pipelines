@@ -1,0 +1,16 @@
+{
+	"name": "LS_AzureSQLDb",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AzureSqlDatabase",
+		"typeProperties": {
+			"connectionString": "integrated security=False;encrypt=True;connection timeout=30;data source=sql-pltdev-srpt01.database.windows.net;initial catalog=SQLDB-PLTDEV-SRPT01;user id=etluser",
+			"encryptedCredential": "eyJDcmVkZW50aWFsSWQiOiIyYWNhZmNlNi0yMTJhLTRjMWItOWE4MC0xYjJlMGYwYTUzYmUiLCJWZXJzaW9uIjoiMi4wIiwiQ2xhc3NUeXBlIjoiTWljcm9zb2Z0LkRhdGFQcm94eS5Db3JlLkludGVyU2VydmljZURhdGFDb250cmFjdC5DcmVkZW50aWFsU1UwNkNZMTQifQ=="
+		},
+		"connectVia": {
+			"referenceName": "CLX-IR-ONPREM-01-Linked",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}

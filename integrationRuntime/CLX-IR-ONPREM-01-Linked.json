@@ -1,0 +1,12 @@
+{
+	"name": "CLX-IR-ONPREM-01-Linked",
+	"properties": {
+		"type": "SelfHosted",
+		"typeProperties": {
+			"linkedInfo": {
+				"resourceId": "/subscriptions/bf940dcb-0af5-4597-a54e-1aa5d3cc0b38/resourcegroups/RG-ITPROD-ITSERV01/providers/Microsoft.DataFactory/factories/ADF-ITPROD-IRSERV01/integrationruntimes/CLX-IR-ONPREM-01",
+				"authorizationType": "Rbac"
+			}
+		}
+	}
+}

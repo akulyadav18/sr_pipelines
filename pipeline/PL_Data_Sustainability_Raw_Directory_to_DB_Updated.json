@@ -1,0 +1,831 @@
+{
+	"name": "PL_Data_Sustainability_Raw_Directory_to_DB_Updated",
+	"properties": {
+		"activities": [
+			{
+				"name": "PF_Sustainability_Job_Name",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "job_name_Sustainability",
+					"value": {
+						"value": "@variables('job_name_Sustainability_value')",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "LKP_Job_Key_Sustainability",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "PF_Sustainability_Job_Name",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "@concat('select job_key from ' ,pipeline().parameters.schema,'.',pipeline().parameters.table_job_control,' where job_name=''',variables('job_name_Sustainability_value'),'''')",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_LND_STG_ADMIN",
+						"type": "DatasetReference"
+					}
+				}
+			},
+			{
+				"name": "LKP_Job_Run_Log_Sustainability",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "LKP_Job_Key_Sustainability",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderStoredProcedureName": "[Rnd].[USP_Insert_Job_Run]",
+						"storedProcedureParameters": {
+							"ADF_Name": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().DataFactory",
+									"type": "Expression"
+								}
+							},
+							"file_transfer_flag": {
+								"type": "String",
+								"value": {
+									"value": "@variables('file_transfer_flag')",
+									"type": "Expression"
+								}
+							},
+							"job_key": {
+								"type": "String",
+								"value": {
+									"value": "@activity('LKP_Job_Key_Sustainability').output.firstRow.job_key",
+									"type": "Expression"
+								}
+							},
+							"job_start_date_time": {
+								"type": "DateTime",
+								"value": {
+									"value": "@pipeline().TriggerTime",
+									"type": "Expression"
+								}
+							},
+							"last_update_date": {
+								"type": "DateTime",
+								"value": {
+									"value": "@pipeline().TriggerTime",
+									"type": "Expression"
+								}
+							},
+							"Pipeline_Name": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().Pipeline",
+									"type": "Expression"
+								}
+							},
+							"Pipeline_Start_Time": {
+								"type": "DateTime",
+								"value": {
+									"value": "@pipeline().TriggerTime",
+									"type": "Expression"
+								}
+							},
+							"PL_Run_ID": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().RunId",
+									"type": "Expression"
+								}
+							},
+							"Action": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.action_insert",
+									"type": "Expression"
+								}
+							},
+							"Execution_Status": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.exec_status",
+									"type": "Expression"
+								}
+							}
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_LND_STG_ADMIN",
+						"type": "DatasetReference"
+					}
+				}
+			},
+			{
+				"name": "Copy_data_Landing_Zone_Sustainability_to_Landing_Table",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "LKP_Job_Run_Log_Sustainability",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"additionalColumns": [
+							{
+								"name": "sust_filename",
+								"value": {
+									"value": "@pipeline().parameters.filename_sust",
+									"type": "Expression"
+								}
+							}
+						],
+						"storeSettings": {
+							"type": "AzureBlobStorageReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
+						}
+					},
+					"sink": {
+						"type": "AzureSqlSink"
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"name": "Level ",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "level",
+									"type": "String",
+									"physicalType": "char"
+								}
+							},
+							{
+								"source": {
+									"name": " RelationshipName ",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "relation_name",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"name": " From or To ",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "from_or_to",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"name": " Type ",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "material_type",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"name": " Name ",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "material_spec",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"name": " Part Name ",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "material_part_name",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"name": " Weight ",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "material_weight",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"name": " UOM ",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "material_uom",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"name": " PCR",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "material_pcr",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"name": " Revision ",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "revision",
+									"type": "String",
+									"physicalType": "char"
+								}
+							},
+							{
+								"source": {
+									"name": "sust_filename",
+									"type": "String"
+								},
+								"sink": {
+									"name": "sustainability_file_name",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							}
+						],
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_ABLB_LZ_LT",
+						"type": "DatasetReference",
+						"parameters": {
+							"container": {
+								"value": "@pipeline().parameters.filesystem_adls",
+								"type": "Expression"
+							},
+							"directory": {
+								"value": "@pipeline().parameters.directory_raw",
+								"type": "Expression"
+							},
+							"file": {
+								"value": "@pipeline().parameters.filename_sust",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_SQL_Lnd",
+						"type": "DatasetReference",
+						"parameters": {
+							"schema": {
+								"value": "@pipeline().parameters.schema_lnd",
+								"type": "Expression"
+							},
+							"table": {
+								"value": "@pipeline().parameters.table_sust",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			},
+			{
+				"name": "SP_landing_to_Staging_Sustainability",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Copy_data_Landing_Zone_Sustainability_to_Landing_Table",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[Rnd].[usp_lnd_to_rnd_sustainability]",
+					"storedProcedureParameters": {
+						"file_name": {
+							"value": {
+								"value": "@pipeline().parameters.filename_sust",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"job_key": {
+							"value": {
+								"value": "@activity('LKP_Job_Key_Sustainability').output.firstRow.job_key",
+								"type": "Expression"
+							},
+							"type": "Int64"
+						},
+						"job_run_key": {
+							"value": {
+								"value": "@activity('LKP_Job_Run_Log_Sustainability').output.firstRow.job_run_key",
+								"type": "Expression"
+							},
+							"type": "Int64"
+						},
+						"message": {
+							"value": null,
+							"type": "String"
+						},
+						"status": {
+							"value": null,
+							"type": "Int32"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_AzureSQDb_Admin",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Execute_Staging_to_Curated_Pipeline_copy1",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "LKP_Job_File_Log_Sustainability",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_Tran_Sustainability_Staging_Table_to_Curated_ADLS_Updated",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"job_run_key": {
+							"value": "@activity('LKP_Job_Run_Log_Sustainability').output.firstRow.job_run_key",
+							"type": "Expression"
+						},
+						"filename": {
+							"value": "@pipeline().parameters.filename_sust",
+							"type": "Expression"
+						},
+						"action_insert": {
+							"value": "@pipeline().parameters.action_insert",
+							"type": "Expression"
+						},
+						"exec_status": {
+							"value": "@pipeline().parameters.exec_status",
+							"type": "Expression"
+						},
+						"file_size": {
+							"value": "@pipeline().parameters.file_size",
+							"type": "Expression"
+						},
+						"job_file_key": {
+							"value": "@pipeline().parameters.job_file_key",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "SP_Job_Run_Status_Pass",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "SP_landing_to_Staging_Sustainability",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[Rnd].[USP_Insert_Job_Run]",
+					"storedProcedureParameters": {
+						"Action": {
+							"value": {
+								"value": "@pipeline().parameters.action_update",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"ADF_Name": {
+							"value": {
+								"value": "@pipeline().DataFactory",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"Execution_Status": {
+							"value": {
+								"value": "@pipeline().parameters.run_status_pass",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"file_transfer_flag": {
+							"value": {
+								"value": "@variables('file_transfer_flag')",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"job_key": {
+							"value": {
+								"value": "@activity('LKP_Job_Key_Sustainability').output.firstRow.job_key",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"job_start_date_time": {
+							"value": {
+								"value": "@pipeline().TriggerTime",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						},
+						"last_update_date": {
+							"value": {
+								"value": "@pipeline().TriggerTime",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						},
+						"Pipeline_Name": {
+							"value": {
+								"value": "@pipeline().Pipeline",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"Pipeline_Start_Time": {
+							"value": {
+								"value": "@pipeline().TriggerTime",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						},
+						"PL_Run_ID": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_AzureSQDb_Admin",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "LKP_Job_File_Log_Sustainability",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "SP_Job_Run_Status_Pass",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderStoredProcedureName": "[Rnd].[USP_Job_File_Log]",
+						"storedProcedureParameters": {
+							"file_location": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.directory_landing",
+									"type": "Expression"
+								}
+							},
+							"file_name": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.filename_sust",
+									"type": "Expression"
+								}
+							},
+							"file_size": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.file_size",
+									"type": "Expression"
+								}
+							},
+							"job_key": {
+								"type": "String",
+								"value": {
+									"value": "@activity('LKP_Job_Key_Sustainability').output.firstRow.job_key",
+									"type": "Expression"
+								}
+							},
+							"job_run_key": {
+								"type": "String",
+								"value": {
+									"value": "@activity('LKP_Job_Run_Log_Sustainability').output.firstRow.job_run_key",
+									"type": "Expression"
+								}
+							},
+							"job_file_key": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.job_file_key",
+									"type": "Expression"
+								}
+							},
+							"datafactory_name": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().DataFactory",
+									"type": "Expression"
+								}
+							},
+							"pipeline_trigger_time": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().TriggerTime",
+									"type": "Expression"
+								}
+							},
+							"pipeline_trigger_id": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().TriggerId",
+									"type": "Expression"
+								}
+							},
+							"pipeline_run_id": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().RunId",
+									"type": "Expression"
+								}
+							},
+							"pipeline_name": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().Pipeline",
+									"type": "Expression"
+								}
+							}
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_LND_STG_ADMIN",
+						"type": "DatasetReference"
+					}
+				}
+			},
+			{
+				"name": "Execute_Fail_Alert",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Copy_data_Landing_Zone_Sustainability_to_Landing_Table",
+						"dependencyConditions": [
+							"Failed"
+						]
+					},
+					{
+						"activity": "Execute_Staging_to_Curated_Pipeline_copy1",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_Fail_Alert",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"job_key": {
+							"value": "@activity('LKP_Job_Key_Sustainability').output.firstRow.job_key",
+							"type": "Expression"
+						}
+					}
+				}
+			}
+		],
+		"parameters": {
+			"schema": {
+				"type": "string",
+				"defaultValue": "control_etl"
+			},
+			"table_job_control": {
+				"type": "string",
+				"defaultValue": "job_control"
+			},
+			"table_job_run_log": {
+				"type": "string",
+				"defaultValue": "job_run_log"
+			},
+			"table_job_file_log": {
+				"type": "string",
+				"defaultValue": "job_file"
+			},
+			"directory_raw": {
+				"type": "string",
+				"defaultValue": "Raw/RnD/PLM/Sustainability"
+			},
+			"filesystem_adls": {
+				"type": "string",
+				"defaultValue": "clx-datalake"
+			},
+			"directory_landing": {
+				"type": "string",
+				"defaultValue": "Landing/RnD/PLM/Sustainability"
+			},
+			"all_csv_files": {
+				"type": "string",
+				"defaultValue": "*.csv"
+			},
+			"schema_lnd": {
+				"type": "string",
+				"defaultValue": "tmp"
+			},
+			"table_sust": {
+				"type": "string",
+				"defaultValue": "lnd_sustainability"
+			},
+			"action_insert": {
+				"type": "string",
+				"defaultValue": "insert"
+			},
+			"exec_status": {
+				"type": "string",
+				"defaultValue": "In_Progress"
+			},
+			"action_update": {
+				"type": "string",
+				"defaultValue": "update"
+			},
+			"run_status_fail": {
+				"type": "string",
+				"defaultValue": "Failed"
+			},
+			"run_status_pass": {
+				"type": "string",
+				"defaultValue": "Success"
+			},
+			"email_url": {
+				"type": "string",
+				"defaultValue": "https://prod-51.eastus2.logic.azure.com:443/workflows/ceda425476814f708eb7cc9d5367112a/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=VK3vUyZ1Fxy6PdExFQAekhkbehfXiU6f9tEztB4qy-c"
+			},
+			"file_size": {
+				"type": "string"
+			},
+			"filename_sust": {
+				"type": "string"
+			},
+			"job_file_key": {
+				"type": "string"
+			},
+			"job_key": {
+				"type": "string"
+			}
+		},
+		"variables": {
+			"job_name_Sustainability_value": {
+				"type": "String",
+				"defaultValue": "Extract_and_Load_Sustainability_LZ_LT"
+			},
+			"job_name_Sustainability": {
+				"type": "String"
+			},
+			"job_key": {
+				"type": "String"
+			},
+			"file_transfer_flag": {
+				"type": "String",
+				"defaultValue": "Y"
+			},
+			"job_run_key": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "PL_ClOROX_SR"
+		},
+		"annotations": [],
+		"lastPublishTime": "2021-06-18T14:21:58Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

@@ -1,0 +1,16 @@
+{
+	"name": "DS_LND_STG_ADMIN",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_AzureSQDb_Admin",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "DS_CLOROX_SR"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

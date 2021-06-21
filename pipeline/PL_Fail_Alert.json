@@ -1,0 +1,164 @@
+{
+	"name": "PL_Fail_Alert",
+	"properties": {
+		"activities": [
+			{
+				"name": "SP_Job_Run_Status_Fail",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[Rnd].[USP_Insert_Job_Run]",
+					"storedProcedureParameters": {
+						"Action": {
+							"value": {
+								"value": "@pipeline().parameters.action_update",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"ADF_Name": {
+							"value": {
+								"value": "@pipeline().DataFactory",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"Execution_Status": {
+							"value": {
+								"value": "@pipeline().parameters.run_status_fail",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"file_transfer_flag": {
+							"value": {
+								"value": "@pipeline().parameters.file_transfer_flag",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"job_key": {
+							"value": {
+								"value": "@pipeline().parameters.job_key",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"job_start_date_time": {
+							"value": {
+								"value": "@pipeline().TriggerTime",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						},
+						"last_update_date": {
+							"value": {
+								"value": "@pipeline().TriggerTime",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						},
+						"Pipeline_Name": {
+							"value": {
+								"value": "@pipeline().Pipeline",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"Pipeline_Start_Time": {
+							"value": {
+								"value": "@pipeline().TriggerTime",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						},
+						"PL_Run_ID": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_AzureSQDb_Admin",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Web1",
+				"type": "WebActivity",
+				"dependsOn": [
+					{
+						"activity": "SP_Job_Run_Status_Fail",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"url": {
+						"value": "@pipeline().globalParameters.failure_mail_url",
+						"type": "Expression"
+					},
+					"connectVia": {
+						"referenceName": "AutoResolveIntegrationRuntime",
+						"type": "IntegrationRuntimeReference"
+					},
+					"method": "POST",
+					"body": {
+						"value": "{\n \"Project\" : \"@{pipeline().globalParameters.project_name}\",\n \"Module Name\" : \"pipeline().parameters.job_name\",\n \"Environment\" : \"@{pipeline().globalParameters.environment}\",\n \"Title\":\"Pipeline Execution Failed\",\n \"Pipeline Run ID\" : \"@{pipeline().RunId}\",\n \"Pipeline Trigger ID\" : \"@{pipeline().TriggerId}\",\n \"Pipeline Name\" : \"@{pipeline().Pipeline}\",\n \"Data Factory Name \" : \"@{pipeline().DataFactory}\",\n \"Pipeline Trigger Time\" :\"@{pipeline().TriggerTime}\",\n \"Pipeline Failure Time\" : \"@{utcnow()}\",\n \"Recipients\" : \"@{pipeline().globalParameters.mail_notification_recipient}\",\n}",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"action_update": {
+				"type": "string",
+				"defaultValue": "update"
+			},
+			"run_status_fail": {
+				"type": "string",
+				"defaultValue": "Failed"
+			},
+			"file_transfer_flag": {
+				"type": "string",
+				"defaultValue": "N"
+			},
+			"job_key": {
+				"type": "string"
+			},
+			"email_url": {
+				"type": "string",
+				"defaultValue": "https://prod-51.eastus2.logic.azure.com:443/workflows/ceda425476814f708eb7cc9d5367112a/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=VK3vUyZ1Fxy6PdExFQAekhkbehfXiU6f9tEztB4qy-c"
+			},
+			"job_name": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "PL_ClOROX_SR"
+		},
+		"annotations": [],
+		"lastPublishTime": "2021-06-17T11:04:51Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

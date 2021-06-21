@@ -1,0 +1,178 @@
+{
+	"name": "DS_SFTP_SAP",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_SFTP_Source_AFTPPL01",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"directory": {
+				"type": "string"
+			},
+			"file": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "DS_CLOROX_SR"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "SftpLocation",
+				"fileName": {
+					"value": "@dataset().file",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@dataset().directory",
+					"type": "Expression"
+				}
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "Cal. year / month",
+				"type": "String"
+			},
+			{
+				"name": "Corp - CustHier1",
+				"type": "String"
+			},
+			{
+				"name": "Prop_2",
+				"type": "String"
+			},
+			{
+				"name": "Subsid - CustHier2",
+				"type": "String"
+			},
+			{
+				"name": "Prop_4",
+				"type": "String"
+			},
+			{
+				"name": "Reg/Div - CustHier3",
+				"type": "String"
+			},
+			{
+				"name": "Prop_6",
+				"type": "String"
+			},
+			{
+				"name": "Sold-to party",
+				"type": "String"
+			},
+			{
+				"name": "Prop_8",
+				"type": "String"
+			},
+			{
+				"name": "Global Category",
+				"type": "String"
+			},
+			{
+				"name": "Prop_10",
+				"type": "String"
+			},
+			{
+				"name": "Brand",
+				"type": "String"
+			},
+			{
+				"name": "Prop_12",
+				"type": "String"
+			},
+			{
+				"name": "EAN/UPC",
+				"type": "String"
+			},
+			{
+				"name": "Material",
+				"type": "String"
+			},
+			{
+				"name": "Prop_15",
+				"type": "String"
+			},
+			{
+				"name": "Material Division",
+				"type": "String"
+			},
+			{
+				"name": "Prop_17",
+				"type": "String"
+			},
+			{
+				"name": "Trade Sector",
+				"type": "String"
+			},
+			{
+				"name": "Prop_19",
+				"type": "String"
+			},
+			{
+				"name": "Profit Center",
+				"type": "String"
+			},
+			{
+				"name": "Prop_21",
+				"type": "String"
+			},
+			{
+				"name": "Sales Dept",
+				"type": "String"
+			},
+			{
+				"name": "Prop_23",
+				"type": "String"
+			},
+			{
+				"name": "Sector",
+				"type": "String"
+			},
+			{
+				"name": "Prop_25",
+				"type": "String"
+			},
+			{
+				"name": "Region",
+				"type": "String"
+			},
+			{
+				"name": "Prop_27",
+				"type": "String"
+			},
+			{
+				"name": "Distribution Channel",
+				"type": "String"
+			},
+			{
+				"name": "Prop_29",
+				"type": "String"
+			},
+			{
+				"name": "Broker",
+				"type": "String"
+			},
+			{
+				"name": "AC - Invoiced",
+				"type": "String"
+			},
+			{
+				"name": "DOS - SC - Invoiced",
+				"type": "String"
+			},
+			{
+				"name": "Net Value - Invoiced",
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,298 @@
+{
+	"name": "PL_Tran_PLM_Transformations",
+	"properties": {
+		"activities": [
+			{
+				"name": "SP_Final_Transformation",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "SP_Parent_Child",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[Rnd].[usp_spr_reporting_transformations]",
+					"storedProcedureParameters": {
+						"job_key": {
+							"value": {
+								"value": "@activity('LKP_Job_Key_SR').output.firstRow.job_key",
+								"type": "Expression"
+							},
+							"type": "Int64"
+						},
+						"job_run_key": {
+							"value": {
+								"value": "@activity('LKP_Job_Run_Log_SR').output.firstRow.job_run_key",
+								"type": "Expression"
+							},
+							"type": "Int64"
+						},
+						"message": {
+							"value": null,
+							"type": "String"
+						},
+						"status": {
+							"value": null,
+							"type": "Int32"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_AzureSQDb_Admin",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "SP_Parent_Child",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "LKP_Job_Run_Log_SR",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[Rnd].[rnd_ebom_parent_child_conversion]",
+					"storedProcedureParameters": {
+						"job_key": {
+							"value": {
+								"value": "@activity('LKP_Job_Key_SR').output.firstRow.job_key",
+								"type": "Expression"
+							},
+							"type": "Int64"
+						},
+						"job_run_key": {
+							"value": {
+								"value": "@activity('LKP_Job_Run_Log_SR').output.firstRow.job_run_key",
+								"type": "Expression"
+							},
+							"type": "Int64"
+						},
+						"message": {
+							"value": null,
+							"type": "String"
+						},
+						"status": {
+							"value": null,
+							"type": "Int32"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_AzureSQDb_Admin",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Job_Name",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "job_name",
+					"value": {
+						"value": "@variables('job_name_sr')",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "LKP_Job_Key_SR",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "Job_Name",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "@concat('select job_key from ' ,pipeline().parameters.schema,'.',pipeline().parameters.table_job_control,' where job_name=''',variables('job_name_sr'),'''')",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_LND_STG_ADMIN",
+						"type": "DatasetReference"
+					}
+				}
+			},
+			{
+				"name": "LKP_Job_Run_Log_SR",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "LKP_Job_Key_SR",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderStoredProcedureName": "[Rnd].[USP_Insert_Job_Run]",
+						"storedProcedureParameters": {
+							"ADF_Name": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().DataFactory",
+									"type": "Expression"
+								}
+							},
+							"file_transfer_flag": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.file_transfer_flag",
+									"type": "Expression"
+								}
+							},
+							"job_key": {
+								"type": "String",
+								"value": {
+									"value": "@activity('LKP_Job_Key_SR').output.firstRow.job_key",
+									"type": "Expression"
+								}
+							},
+							"job_start_date_time": {
+								"type": "DateTime",
+								"value": {
+									"value": "@pipeline().TriggerTime",
+									"type": "Expression"
+								}
+							},
+							"last_update_date": {
+								"type": "DateTime",
+								"value": {
+									"value": "@pipeline().TriggerTime",
+									"type": "Expression"
+								}
+							},
+							"Pipeline_Name": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().Pipeline",
+									"type": "Expression"
+								}
+							},
+							"Pipeline_Start_Time": {
+								"type": "DateTime",
+								"value": {
+									"value": "@pipeline().TriggerTime",
+									"type": "Expression"
+								}
+							},
+							"PL_Run_ID": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().RunId",
+									"type": "Expression"
+								}
+							},
+							"Action": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.action_insert",
+									"type": "Expression"
+								}
+							},
+							"Execution_Status": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.execution_status",
+									"type": "Expression"
+								}
+							}
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_LND_STG_ADMIN",
+						"type": "DatasetReference"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"schema": {
+				"type": "string",
+				"defaultValue": "etl"
+			},
+			"table_job_control": {
+				"type": "string",
+				"defaultValue": "job_control"
+			},
+			"file_transfer_flag": {
+				"type": "string",
+				"defaultValue": "Y"
+			},
+			"action_insert": {
+				"type": "string",
+				"defaultValue": "insert"
+			},
+			"execution_status": {
+				"type": "string",
+				"defaultValue": "Success"
+			}
+		},
+		"variables": {
+			"job_name_sr": {
+				"type": "String",
+				"defaultValue": "EBOM_Parent_Child_Conversion_and_SR_Final_Transformations"
+			},
+			"job_name": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "PL_ClOROX_SR"
+		},
+		"annotations": [],
+		"lastPublishTime": "2021-06-14T12:13:38Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

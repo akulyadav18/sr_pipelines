@@ -1,0 +1,62 @@
+{
+	"name": "DS_SQL_LKP_SAP",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_AzureSQLDb",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "DS_CLOROX_SR"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "Seq_ID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "File_Source",
+				"type": "varchar"
+			},
+			{
+				"name": "File_Type",
+				"type": "varchar"
+			},
+			{
+				"name": "File_Standard_Name",
+				"type": "varchar"
+			},
+			{
+				"name": "Raw_File_Path",
+				"type": "varchar"
+			},
+			{
+				"name": "Archive_File_Path",
+				"type": "varchar"
+			},
+			{
+				"name": "Rec_Insert_Dt",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "Rec_Update_Dt",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "Rec_Is_Active",
+				"type": "char"
+			}
+		],
+		"typeProperties": {
+			"schema": "etl",
+			"table": "tbl_file_standard_name"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

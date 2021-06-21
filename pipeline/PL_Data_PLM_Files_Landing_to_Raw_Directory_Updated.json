@@ -1,0 +1,949 @@
+{
+	"name": "PL_Data_PLM_Files_Landing_to_Raw_Directory_Updated",
+	"properties": {
+		"activities": [
+			{
+				"name": "Set variable1",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "filename_trim_value",
+					"value": {
+						"value": "@substring(pipeline().parameters.file_name,0,4)",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "If Condition1",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "Set variable1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@or(or(equals(variables('filename_trim_value'),'EBOM'),equals(variables('filename_trim_value'),'Sust')), equals(variables('filename_trim_value'),'SAPB'))",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "Send_Email",
+							"type": "WebActivity",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"url": {
+									"value": "@pipeline().parameters.email_url_fielname_incorrect",
+									"type": "Expression"
+								},
+								"connectVia": {
+									"referenceName": "AutoResolveIntegrationRuntime",
+									"type": "IntegrationRuntimeReference"
+								},
+								"method": "POST",
+								"body": {
+									"value": "{\n  \"title\":\"Incorrect File Name\",\n  \"filename\":\"@{pipeline().parameters.file_name}\",\n  \"Message\":\"Please check the filename\" \n}",
+									"type": "Expression"
+								}
+							}
+						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "Switch_File_Type_copy1",
+							"type": "Switch",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"on": {
+									"value": "@variables('filename_trim_value')",
+									"type": "Expression"
+								},
+								"cases": [
+									{
+										"value": "EBOM",
+										"activities": [
+											{
+												"name": "PF_EBOM_Job_Name_copy1",
+												"type": "SetVariable",
+												"dependsOn": [],
+												"userProperties": [],
+												"typeProperties": {
+													"variableName": "job_name",
+													"value": {
+														"value": "@variables('job_name_EBOM_value')",
+														"type": "Expression"
+													}
+												}
+											},
+											{
+												"name": "LKP_Job_Key_copy1",
+												"type": "Lookup",
+												"dependsOn": [
+													{
+														"activity": "PF_EBOM_Job_Name_copy1",
+														"dependencyConditions": [
+															"Succeeded"
+														]
+													}
+												],
+												"policy": {
+													"timeout": "7.00:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"source": {
+														"type": "AzureSqlSource",
+														"sqlReaderQuery": {
+															"value": "@concat('select job_key from ' ,pipeline().parameters.schema,'.',pipeline().parameters.table_job_control,' where job_name=''',variables('job_name_EBOM_value'),'''')",
+															"type": "Expression"
+														},
+														"queryTimeout": "02:00:00",
+														"partitionOption": "None"
+													},
+													"dataset": {
+														"referenceName": "DS_LND_STG_ADMIN",
+														"type": "DatasetReference"
+													}
+												}
+											},
+											{
+												"name": "LKP_Job_Run_Log_copy1",
+												"type": "Lookup",
+												"dependsOn": [
+													{
+														"activity": "LKP_Job_Key_copy1",
+														"dependencyConditions": [
+															"Succeeded"
+														]
+													}
+												],
+												"policy": {
+													"timeout": "7.00:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"source": {
+														"type": "AzureSqlSource",
+														"sqlReaderStoredProcedureName": "[Rnd].[USP_Insert_Job_Run]",
+														"storedProcedureParameters": {
+															"Action": {
+																"type": "String",
+																"value": {
+																	"value": "@pipeline().parameters.action_insert",
+																	"type": "Expression"
+																}
+															},
+															"ADF_Name": {
+																"type": "String",
+																"value": {
+																	"value": "@pipeline().DataFactory",
+																	"type": "Expression"
+																}
+															},
+															"file_transfer_flag": {
+																"type": "String",
+																"value": {
+																	"value": "@variables('file_transfer_flag')",
+																	"type": "Expression"
+																}
+															},
+															"job_key": {
+																"type": "String",
+																"value": {
+																	"value": "@variables('job_key')",
+																	"type": "Expression"
+																}
+															},
+															"job_start_date_time": {
+																"type": "DateTime",
+																"value": {
+																	"value": "@pipeline().TriggerTime",
+																	"type": "Expression"
+																}
+															},
+															"last_update_date": {
+																"type": "DateTime",
+																"value": {
+																	"value": "@pipeline().TriggerTime",
+																	"type": "Expression"
+																}
+															},
+															"Pipeline_Name": {
+																"type": "String",
+																"value": {
+																	"value": "@pipeline().Pipeline",
+																	"type": "Expression"
+																}
+															},
+															"Pipeline_Start_Time": {
+																"type": "DateTime",
+																"value": {
+																	"value": "@pipeline().TriggerTime",
+																	"type": "Expression"
+																}
+															},
+															"PL_Run_ID": {
+																"type": "String",
+																"value": {
+																	"value": "@pipeline().RunId",
+																	"type": "Expression"
+																}
+															},
+															"Execution_Status": {
+																"type": "String",
+																"value": {
+																	"value": "@pipeline().parameters.run_status_pass",
+																	"type": "Expression"
+																}
+															}
+														},
+														"queryTimeout": "02:00:00",
+														"partitionOption": "None"
+													},
+													"dataset": {
+														"referenceName": "DS_LND_STG_ADMIN",
+														"type": "DatasetReference"
+													}
+												}
+											},
+											{
+												"name": "Execute Pipeline2",
+												"type": "ExecutePipeline",
+												"dependsOn": [
+													{
+														"activity": "LKP_Job_Run_Log_copy1",
+														"dependencyConditions": [
+															"Succeeded"
+														]
+													}
+												],
+												"userProperties": [],
+												"typeProperties": {
+													"pipeline": {
+														"referenceName": "PL_Reuse_SFTP_PLM_updated",
+														"type": "PipelineReference"
+													},
+													"waitOnCompletion": true,
+													"parameters": {
+														"container": {
+															"value": "@pipeline().parameters.filesystem_adls",
+															"type": "Expression"
+														},
+														"directory_raw": {
+															"value": "@pipeline().parameters.directory_adls",
+															"type": "Expression"
+														},
+														"file": {
+															"value": "@pipeline().parameters.file_name",
+															"type": "Expression"
+														},
+														"schema": {
+															"value": "@pipeline().parameters.schema",
+															"type": "Expression"
+														},
+														"table": {
+															"value": "@pipeline().parameters.table_job_run_log",
+															"type": "Expression"
+														},
+														"job_key": {
+															"value": "@activity('LKP_Job_Key_copy1').output.firstRow.job_key",
+															"type": "Expression"
+														},
+														"job_run_key": {
+															"value": "@activity('LKP_Job_Run_Log_copy1').output.firstRow.job_run_key",
+															"type": "Expression"
+														},
+														"action_update": {
+															"value": "@pipeline().parameters.action_update",
+															"type": "Expression"
+														},
+														"exec_status": {
+															"value": "@pipeline().parameters.run_status_pass",
+															"type": "Expression"
+														},
+														"file_transfer_flag": {
+															"value": "@variables('file_transfer_flag')",
+															"type": "Expression"
+														},
+														"file_location_raw": {
+															"value": "@pipeline().parameters.directory_adls",
+															"type": "Expression"
+														},
+														"file_name": {
+															"value": "@pipeline().parameters.file_name",
+															"type": "Expression"
+														},
+														"file_size": {
+															"value": "@pipeline().parameters.file_size",
+															"type": "Expression"
+														},
+														"directory_sftp": {
+															"value": "@pipeline().globalParameters.directory_sftp",
+															"type": "Expression"
+														},
+														"file_location_landing": {
+															"value": "@pipeline().parameters.directory_Landing_EBOM",
+															"type": "Expression"
+														},
+														"directory_landing": {
+															"value": "@pipeline().parameters.directory_Landing_EBOM",
+															"type": "Expression"
+														}
+													}
+												}
+											},
+											{
+												"name": "Lookup2",
+												"type": "Lookup",
+												"dependsOn": [
+													{
+														"activity": "Execute Pipeline2",
+														"dependencyConditions": [
+															"Succeeded"
+														]
+													}
+												],
+												"policy": {
+													"timeout": "7.00:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"source": {
+														"type": "AzureSqlSource",
+														"sqlReaderQuery": {
+															"value": "@concat('select max(job_file_key) as job_file_key from ', pipeline().parameters.schema,'.',pipeline().parameters.table_job_file_log, ' where file_name = ''' , pipeline().parameters.file_name,''' ;')",
+															"type": "Expression"
+														},
+														"queryTimeout": "02:00:00",
+														"partitionOption": "None"
+													},
+													"dataset": {
+														"referenceName": "DS_LND_STG_ADMIN",
+														"type": "DatasetReference"
+													}
+												}
+											},
+											{
+												"name": "Execute Pipeline3",
+												"type": "ExecutePipeline",
+												"dependsOn": [
+													{
+														"activity": "Lookup2",
+														"dependencyConditions": [
+															"Succeeded"
+														]
+													}
+												],
+												"userProperties": [],
+												"typeProperties": {
+													"pipeline": {
+														"referenceName": "PL_Data_EBOM_Raw_Directory_to_DB_Updated",
+														"type": "PipelineReference"
+													},
+													"waitOnCompletion": true,
+													"parameters": {
+														"filename_ebom": {
+															"value": "@pipeline().parameters.file_name",
+															"type": "Expression"
+														},
+														"filesize_ebom": {
+															"value": "@pipeline().parameters.file_size",
+															"type": "Expression"
+														},
+														"job_key": {
+															"value": "@activity('LKP_Job_Key_copy1').output.firstRow.job_key",
+															"type": "Expression"
+														},
+														"job_run_key": {
+															"value": "@activity('LKP_Job_Run_Log_copy1').output.firstRow.job_run_key",
+															"type": "Expression"
+														},
+														"job_file_key": {
+															"value": "@activity('Lookup2').output.firstRow.job_file_key",
+															"type": "Expression"
+														}
+													}
+												}
+											},
+											{
+												"name": "Execute_Fail_Alert_EBOM",
+												"type": "ExecutePipeline",
+												"dependsOn": [
+													{
+														"activity": "Execute Pipeline2",
+														"dependencyConditions": [
+															"Failed"
+														]
+													},
+													{
+														"activity": "Execute Pipeline3",
+														"dependencyConditions": [
+															"Failed"
+														]
+													}
+												],
+												"userProperties": [],
+												"typeProperties": {
+													"pipeline": {
+														"referenceName": "PL_Fail_Alert",
+														"type": "PipelineReference"
+													},
+													"waitOnCompletion": true,
+													"parameters": {
+														"job_key": {
+															"value": "@activity('LKP_Job_Key_copy1').output.firstRow.job_key",
+															"type": "Expression"
+														},
+														"job_name": {
+															"value": "@variables('job_name')",
+															"type": "Expression"
+														}
+													}
+												}
+											}
+										]
+									},
+									{
+										"value": "Sust",
+										"activities": [
+											{
+												"name": "PF_Sustainability_Job_Name",
+												"type": "SetVariable",
+												"dependsOn": [],
+												"userProperties": [],
+												"typeProperties": {
+													"variableName": "job_name",
+													"value": {
+														"value": "@variables('job_name_Sustainability_value')",
+														"type": "Expression"
+													}
+												}
+											},
+											{
+												"name": "LKP_Job_Key_Sust",
+												"type": "Lookup",
+												"dependsOn": [
+													{
+														"activity": "PF_Sustainability_Job_Name",
+														"dependencyConditions": [
+															"Succeeded"
+														]
+													}
+												],
+												"policy": {
+													"timeout": "7.00:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"source": {
+														"type": "AzureSqlSource",
+														"sqlReaderQuery": {
+															"value": "@concat('select job_key from ' ,pipeline().parameters.schema,'.',pipeline().parameters.table_job_control,' where job_name=''',variables('job_name_Sustainability_value'),'''')",
+															"type": "Expression"
+														},
+														"queryTimeout": "02:00:00",
+														"partitionOption": "None"
+													},
+													"dataset": {
+														"referenceName": "DS_LND_STG_ADMIN",
+														"type": "DatasetReference"
+													}
+												}
+											},
+											{
+												"name": "LKP_Job_Run_Log_Sust",
+												"type": "Lookup",
+												"dependsOn": [
+													{
+														"activity": "LKP_Job_Key_Sust",
+														"dependencyConditions": [
+															"Succeeded"
+														]
+													}
+												],
+												"policy": {
+													"timeout": "7.00:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"source": {
+														"type": "AzureSqlSource",
+														"sqlReaderStoredProcedureName": "[Rnd].[USP_Insert_Job_Run]",
+														"storedProcedureParameters": {
+															"Action": {
+																"type": "String",
+																"value": {
+																	"value": "@pipeline().parameters.action_insert",
+																	"type": "Expression"
+																}
+															},
+															"ADF_Name": {
+																"type": "String",
+																"value": {
+																	"value": "@pipeline().DataFactory",
+																	"type": "Expression"
+																}
+															},
+															"Execution_Status": {
+																"type": "String",
+																"value": {
+																	"value": "@pipeline().parameters.run_status_pass",
+																	"type": "Expression"
+																}
+															},
+															"file_transfer_flag": {
+																"type": "String",
+																"value": {
+																	"value": "@variables('file_transfer_flag')",
+																	"type": "Expression"
+																}
+															},
+															"job_key": {
+																"type": "String",
+																"value": {
+																	"value": "@activity('LKP_Job_Key_Sust').output.firstRow.job_key",
+																	"type": "Expression"
+																}
+															},
+															"job_start_date_time": {
+																"type": "DateTime",
+																"value": {
+																	"value": "@pipeline().TriggerTime",
+																	"type": "Expression"
+																}
+															},
+															"last_update_date": {
+																"type": "DateTime",
+																"value": {
+																	"value": "@pipeline().TriggerTime",
+																	"type": "Expression"
+																}
+															},
+															"Pipeline_Name": {
+																"type": "String",
+																"value": {
+																	"value": "@pipeline().Pipeline",
+																	"type": "Expression"
+																}
+															},
+															"Pipeline_Start_Time": {
+																"type": "DateTime",
+																"value": {
+																	"value": "@pipeline().TriggerTime",
+																	"type": "Expression"
+																}
+															},
+															"PL_Run_ID": {
+																"type": "String",
+																"value": {
+																	"value": "@pipeline().RunId",
+																	"type": "Expression"
+																}
+															}
+														},
+														"queryTimeout": "02:00:00",
+														"partitionOption": "None"
+													},
+													"dataset": {
+														"referenceName": "DS_LND_STG_ADMIN",
+														"type": "DatasetReference"
+													}
+												}
+											},
+											{
+												"name": "Execute_PL_Data_LZ_to_LT",
+												"type": "ExecutePipeline",
+												"dependsOn": [
+													{
+														"activity": "Lookup1",
+														"dependencyConditions": [
+															"Succeeded"
+														]
+													}
+												],
+												"userProperties": [],
+												"typeProperties": {
+													"pipeline": {
+														"referenceName": "PL_Data_Sustainability_Raw_Directory_to_DB_Updated",
+														"type": "PipelineReference"
+													},
+													"waitOnCompletion": true,
+													"parameters": {
+														"file_size": {
+															"value": "@pipeline().parameters.file_size",
+															"type": "Expression"
+														},
+														"filename_sust": {
+															"value": "@pipeline().parameters.file_name",
+															"type": "Expression"
+														},
+														"job_file_key": {
+															"value": "@activity('Lookup1').output.firstRow.job_file_key",
+															"type": "Expression"
+														},
+														"job_key": {
+															"value": "@activity('LKP_Job_Key_Sust').output.firstRow.job_key",
+															"type": "Expression"
+														}
+													}
+												}
+											},
+											{
+												"name": "Execute Pipeline1",
+												"type": "ExecutePipeline",
+												"dependsOn": [
+													{
+														"activity": "LKP_Job_Run_Log_Sust",
+														"dependencyConditions": [
+															"Succeeded"
+														]
+													}
+												],
+												"userProperties": [],
+												"typeProperties": {
+													"pipeline": {
+														"referenceName": "PL_Reuse_SFTP_PLM_updated",
+														"type": "PipelineReference"
+													},
+													"waitOnCompletion": true,
+													"parameters": {
+														"container": {
+															"value": "@pipeline().parameters.filesystem_adls",
+															"type": "Expression"
+														},
+														"directory_raw": {
+															"value": "@pipeline().parameters.directory_adls_sust",
+															"type": "Expression"
+														},
+														"file": {
+															"value": "@pipeline().parameters.file_name",
+															"type": "Expression"
+														},
+														"schema": {
+															"value": "@pipeline().parameters.schema",
+															"type": "Expression"
+														},
+														"table": {
+															"value": "@pipeline().parameters.table_job_run_log",
+															"type": "Expression"
+														},
+														"job_key": {
+															"value": "@activity('LKP_Job_Key_Sust').output.firstRow.job_key",
+															"type": "Expression"
+														},
+														"job_run_key": {
+															"value": "@activity('LKP_Job_Run_Log_Sust').output.firstRow.job_run_key",
+															"type": "Expression"
+														},
+														"action_update": {
+															"value": "@pipeline().parameters.action_update",
+															"type": "Expression"
+														},
+														"exec_status": {
+															"value": "@pipeline().parameters.run_status_pass",
+															"type": "Expression"
+														},
+														"file_transfer_flag": {
+															"value": "@variables('file_transfer_flag')",
+															"type": "Expression"
+														},
+														"file_location_raw": {
+															"value": "@pipeline().parameters.directory_adls_sust",
+															"type": "Expression"
+														},
+														"file_name": {
+															"value": "@pipeline().parameters.file_name",
+															"type": "Expression"
+														},
+														"file_size": {
+															"value": "@pipeline().parameters.file_size",
+															"type": "Expression"
+														},
+														"directory_sftp": {
+															"value": "@pipeline().parameters.directory_sftp",
+															"type": "Expression"
+														},
+														"file_location_landing": {
+															"value": "@pipeline().parameters.directory_Landing_Sustainability",
+															"type": "Expression"
+														},
+														"directory_landing": {
+															"value": "@pipeline().parameters.directory_Landing_Sustainability",
+															"type": "Expression"
+														}
+													}
+												}
+											},
+											{
+												"name": "Lookup1",
+												"type": "Lookup",
+												"dependsOn": [
+													{
+														"activity": "Execute Pipeline1",
+														"dependencyConditions": [
+															"Succeeded"
+														]
+													}
+												],
+												"policy": {
+													"timeout": "7.00:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"source": {
+														"type": "AzureSqlSource",
+														"sqlReaderQuery": {
+															"value": "@concat('select max(job_file_key) as job_file_key from ', pipeline().parameters.schema,'.',pipeline().parameters.table_job_file_log, ' where file_name = ''' , pipeline().parameters.file_name,''' ;')",
+															"type": "Expression"
+														},
+														"queryTimeout": "02:00:00",
+														"partitionOption": "None"
+													},
+													"dataset": {
+														"referenceName": "DS_LND_STG_ADMIN",
+														"type": "DatasetReference"
+													}
+												}
+											},
+											{
+												"name": "Execute_Fail_Alert_Sust",
+												"type": "ExecutePipeline",
+												"dependsOn": [
+													{
+														"activity": "Execute Pipeline1",
+														"dependencyConditions": [
+															"Failed"
+														]
+													},
+													{
+														"activity": "Execute_PL_Data_LZ_to_LT",
+														"dependencyConditions": [
+															"Failed"
+														]
+													}
+												],
+												"userProperties": [],
+												"typeProperties": {
+													"pipeline": {
+														"referenceName": "PL_Fail_Alert",
+														"type": "PipelineReference"
+													},
+													"waitOnCompletion": true,
+													"parameters": {
+														"job_key": {
+															"value": "@activity('LKP_Job_Key_Sust').output.firstRow.job_key",
+															"type": "Expression"
+														},
+														"job_name": {
+															"value": "@variables('job_name')",
+															"type": "Expression"
+														}
+													}
+												}
+											}
+										]
+									}
+								]
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"file_name": {
+				"type": "string"
+			},
+			"directory_sftp": {
+				"type": "string",
+				"defaultValue": "/home/svcrndreporting/"
+			},
+			"directory_adls": {
+				"type": "string",
+				"defaultValue": "Raw/RnD/PLM/EBOM"
+			},
+			"filesystem_adls": {
+				"type": "string",
+				"defaultValue": "clx-datalake"
+			},
+			"table_job_control": {
+				"type": "string",
+				"defaultValue": "job_control"
+			},
+			"table_job_run_log": {
+				"type": "string",
+				"defaultValue": "job_run_log"
+			},
+			"table_job_file_log": {
+				"type": "string",
+				"defaultValue": "job_file"
+			},
+			"schema": {
+				"type": "string",
+				"defaultValue": "control_etl"
+			},
+			"directory_adls_sust": {
+				"type": "string",
+				"defaultValue": "Raw/RnD/PLM/Sustainability"
+			},
+			"file_size": {
+				"type": "string"
+			},
+			"directory_adls_sap": {
+				"type": "string",
+				"defaultValue": "Raw/RnD/SAP"
+			},
+			"directory_Landing_EBOM": {
+				"type": "string",
+				"defaultValue": "Landing/RnD/PLM/EBOM"
+			},
+			"all_csv_files": {
+				"type": "string",
+				"defaultValue": "*.csv"
+			},
+			"directory_Landing_Sustainability": {
+				"type": "string",
+				"defaultValue": "Landing/RnD/PLM/Sustainability"
+			},
+			"directory_Landing_SAP": {
+				"type": "string",
+				"defaultValue": "Landing/RnD/SAP"
+			},
+			"action_insert": {
+				"type": "string",
+				"defaultValue": "insert"
+			},
+			"action_update": {
+				"type": "string",
+				"defaultValue": "update"
+			},
+			"run_status_pass": {
+				"type": "string",
+				"defaultValue": "Success"
+			},
+			"run_status_fail": {
+				"type": "string",
+				"defaultValue": "Failed"
+			},
+			"exec_status": {
+				"type": "string",
+				"defaultValue": "In_Progress"
+			},
+			"email_url_fielname_incorrect": {
+				"type": "string",
+				"defaultValue": "https://prod-51.eastus2.logic.azure.com:443/workflows/ceda425476814f708eb7cc9d5367112a/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=VK3vUyZ1Fxy6PdExFQAekhkbehfXiU6f9tEztB4qy-c"
+			},
+			"job_key": {
+				"type": "string"
+			},
+			"job_run_key": {
+				"type": "string"
+			},
+			"email_url": {
+				"type": "string",
+				"defaultValue": "https://prod-51.eastus2.logic.azure.com:443/workflows/ceda425476814f708eb7cc9d5367112a/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=VK3vUyZ1Fxy6PdExFQAekhkbehfXiU6f9tEztB4qy-c"
+			},
+			"file_extension": {
+				"type": "string",
+				"defaultValue": ".csv"
+			}
+		},
+		"variables": {
+			"container": {
+				"type": "String",
+				"defaultValue": "clx-datalake"
+			},
+			"directory": {
+				"type": "String",
+				"defaultValue": "Raw/RnD/PLM/EBOM"
+			},
+			"job_key": {
+				"type": "String"
+			},
+			"job_run_key": {
+				"type": "String"
+			},
+			"job_file_key": {
+				"type": "String"
+			},
+			"file_transfer_flag": {
+				"type": "String",
+				"defaultValue": "Y"
+			},
+			"job_name_EBOM_value": {
+				"type": "String",
+				"defaultValue": "PickFile_EBOM_SFTP_ADLS"
+			},
+			"filename_trim_value": {
+				"type": "String"
+			},
+			"job_name_Sustainability_value": {
+				"type": "String",
+				"defaultValue": "PickFile_Sustainability_SFTP_ADLS"
+			},
+			"directory_sust": {
+				"type": "String",
+				"defaultValue": "Raw/RnD/PLM/Sustainability"
+			},
+			"df_name": {
+				"type": "String"
+			},
+			"job_name_SAP_value": {
+				"type": "String",
+				"defaultValue": "PickFile_SAP_SFTP_ADLS"
+			},
+			"directory_sap": {
+				"type": "String",
+				"defaultValue": "Raw/RnD/SAP"
+			},
+			"job_name": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "PL_ClOROX_SR"
+		},
+		"annotations": [],
+		"lastPublishTime": "2021-06-18T14:09:45Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

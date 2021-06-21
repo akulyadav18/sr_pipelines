@@ -1,0 +1,1355 @@
+{
+	"name": "PL_Data_SAP_File_Raw_Directory_to_DB",
+	"properties": {
+		"activities": [
+			{
+				"name": "PF_SAP_Job_Name",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "job_name_SAP",
+					"value": {
+						"value": "@variables('job_name_SAP_value')",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "LKP_Job_Key_SAP",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "PF_SAP_Job_Name",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "@concat('select job_key from ' ,pipeline().parameters.schema,'.',pipeline().parameters.table_job_control,' where job_name=''',variables('job_name_SAP_value'),'''')",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_LND_STG_ADMIN",
+						"type": "DatasetReference"
+					}
+				}
+			},
+			{
+				"name": "LKP_Job_Run_Log_SAP",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "LKP_Job_Key_SAP",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderStoredProcedureName": "[Rnd].[USP_Insert_Job_Run]",
+						"storedProcedureParameters": {
+							"ADF_Name": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().DataFactory",
+									"type": "Expression"
+								}
+							},
+							"file_transfer_flag": {
+								"type": "String",
+								"value": {
+									"value": "@variables('file_transfer_flag')",
+									"type": "Expression"
+								}
+							},
+							"job_key": {
+								"type": "String",
+								"value": {
+									"value": "@variables('job_key')",
+									"type": "Expression"
+								}
+							},
+							"job_start_date_time": {
+								"type": "DateTime",
+								"value": {
+									"value": "@pipeline().TriggerTime",
+									"type": "Expression"
+								}
+							},
+							"last_update_date": {
+								"type": "DateTime",
+								"value": {
+									"value": "@pipeline().TriggerTime",
+									"type": "Expression"
+								}
+							},
+							"Pipeline_Name": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().Pipeline",
+									"type": "Expression"
+								}
+							},
+							"Pipeline_Start_Time": {
+								"type": "DateTime",
+								"value": {
+									"value": "@pipeline().TriggerTime",
+									"type": "Expression"
+								}
+							},
+							"PL_Run_ID": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().RunId",
+									"type": "Expression"
+								}
+							},
+							"Execution_Status": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.execution_status",
+									"type": "Expression"
+								}
+							},
+							"Action": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.action_insert",
+									"type": "Expression"
+								}
+							}
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_LND_STG_ADMIN",
+						"type": "DatasetReference"
+					}
+				}
+			},
+			{
+				"name": "Copy_data_Landing_Zone_SAP_to_Landing_Table",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "LKP_Job_Run_Log_SAP",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"additionalColumns": [
+							{
+								"name": "sap_filename",
+								"value": {
+									"value": "@pipeline().parameters.filename",
+									"type": "Expression"
+								}
+							}
+						],
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings",
+							"skipLineCount": 2
+						}
+					},
+					"sink": {
+						"type": "AzureSqlSink"
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 1
+								},
+								"sink": {
+									"name": "customer_number",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 2
+								},
+								"sink": {
+									"name": "customer_description",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 3
+								},
+								"sink": {
+									"name": "corporate_custhier1",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 4
+								},
+								"sink": {
+									"name": "corp_custhier1_description",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 5
+								},
+								"sink": {
+									"name": "subsidiary_custhier2",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 6
+								},
+								"sink": {
+									"name": "subs_custhier2_description",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 7
+								},
+								"sink": {
+									"name": "reg_div_custhier3",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 8
+								},
+								"sink": {
+									"name": "reg_div_custhier3_description",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 9
+								},
+								"sink": {
+									"name": "broker_number",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 10
+								},
+								"sink": {
+									"name": "broker_description",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 11
+								},
+								"sink": {
+									"name": "profit_center",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 12
+								},
+								"sink": {
+									"name": "profit_center_description",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 13
+								},
+								"sink": {
+									"name": "material_number",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 14
+								},
+								"sink": {
+									"name": "material_description",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 15
+								},
+								"sink": {
+									"name": "division_number",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 16
+								},
+								"sink": {
+									"name": "material_division_description",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 17
+								},
+								"sink": {
+									"name": "global_category",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 18
+								},
+								"sink": {
+									"name": "global_category_description",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 19
+								},
+								"sink": {
+									"name": "brand_number",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 20
+								},
+								"sink": {
+									"name": "brand_description",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 21
+								},
+								"sink": {
+									"name": "purpose_number",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 22
+								},
+								"sink": {
+									"name": "purpose_description",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 23
+								},
+								"sink": {
+									"name": "type_number",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 24
+								},
+								"sink": {
+									"name": "type_description",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 25
+								},
+								"sink": {
+									"name": "package_size",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 26
+								},
+								"sink": {
+									"name": "package_size_description",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 27
+								},
+								"sink": {
+									"name": "european_article_numbers_universal_product_code",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 28
+								},
+								"sink": {
+									"name": "region_in_sales_dept_hierarchy",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 29
+								},
+								"sink": {
+									"name": "regional_description",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 30
+								},
+								"sink": {
+									"name": "sales_organization",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 31
+								},
+								"sink": {
+									"name": "sales_organization_decsription",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 32
+								},
+								"sink": {
+									"name": "trade_sector",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 33
+								},
+								"sink": {
+									"name": "trade_sector_description",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 34
+								},
+								"sink": {
+									"name": "country_key",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 35
+								},
+								"sink": {
+									"name": "country_description",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 36
+								},
+								"sink": {
+									"name": "sales_department_in_sales_dept_hierarchy",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 37
+								},
+								"sink": {
+									"name": "sales_department_description",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 38
+								},
+								"sink": {
+									"name": "sector_in_sales_dept_hierarchy",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 39
+								},
+								"sink": {
+									"name": "sector_description",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 40
+								},
+								"sink": {
+									"name": "controlling_area",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 41
+								},
+								"sink": {
+									"name": "controlling_area_description",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 42
+								},
+								"sink": {
+									"name": "distribution_channel",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 43
+								},
+								"sink": {
+									"name": "distribution_channel_description",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 44
+								},
+								"sink": {
+									"name": "calendar_year",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 45
+								},
+								"sink": {
+									"name": "calendar_year_month",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 46
+								},
+								"sink": {
+									"name": "calendar_month",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 47
+								},
+								"sink": {
+									"name": "fiscal_year",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 48
+								},
+								"sink": {
+									"name": "posting_period",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 49
+								},
+								"sink": {
+									"name": "fiscal_year_variant",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 50
+								},
+								"sink": {
+									"name": "base_unit_of_measure_uom",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 51
+								},
+								"sink": {
+									"name": "quantity_in_base_units_of_measure",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 52
+								},
+								"sink": {
+									"name": "base_unit_of_measure_uom2",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 53
+								},
+								"sink": {
+									"name": "dos_quantity",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 54
+								},
+								"sink": {
+									"name": "statistics_currency",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"type": "String",
+									"physicalType": "String",
+									"ordinal": 55
+								},
+								"sink": {
+									"name": "net_value_statistics_currency",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"name": "sap_filename",
+									"type": "String"
+								},
+								"sink": {
+									"name": "sap_filename",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							}
+						],
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_ADLS_PLM_SAP",
+						"type": "DatasetReference",
+						"parameters": {
+							"filesystem": {
+								"value": "@pipeline().parameters.filesystem_adls",
+								"type": "Expression"
+							},
+							"directory": {
+								"value": "@pipeline().parameters.directory_raw",
+								"type": "Expression"
+							},
+							"file": {
+								"value": "@pipeline().parameters.filename",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_SQL_Lnd",
+						"type": "DatasetReference",
+						"parameters": {
+							"schema": {
+								"value": "@pipeline().parameters.schema_lnd",
+								"type": "Expression"
+							},
+							"table": {
+								"value": "@pipeline().parameters.table_sap",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			},
+			{
+				"name": "LKP_Update_Records_In_Run_Log",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "Copy_data_Landing_Zone_SAP_to_Landing_Table",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "@concat('Update ' ,pipeline().parameters.schema,'.',pipeline().parameters.table_job_run_log, ' set records_copied = ' , activity('Copy_data_Landing_Zone_SAP_to_Landing_Table').output.rowsCopied ,  ',' ,  ' records_read = ' , activity('Copy_data_Landing_Zone_SAP_to_Landing_Table').output.rowsRead , ' where  job_key = ' ,activity('LKP_Job_Key_SAP').output.firstRow.job_key, ' and job_run_key =' , activity('LKP_Job_Run_Log_SAP').output.firstRow.job_run_key, ';select 0 as DummyValue;')",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_LND_STG_ADMIN",
+						"type": "DatasetReference"
+					}
+				}
+			},
+			{
+				"name": "Execute_Fail_Alert",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Copy_data_Landing_Zone_SAP_to_Landing_Table",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_Fail_Alert",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"job_key": {
+							"value": "@activity('LKP_Job_Key_SAP').output.firstRow.job_key",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "SP_Landing_to_Staging_SAP",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "LKP_Update_Records_In_Run_Log",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[Rnd].[usp_lnd_to_rnd_sap]",
+					"storedProcedureParameters": {
+						"file_name": {
+							"value": {
+								"value": "@pipeline().parameters.filename",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"job_key": {
+							"value": {
+								"value": "@activity('LKP_Job_Key_SAP').output.firstRow.job_key",
+								"type": "Expression"
+							},
+							"type": "Int64"
+						},
+						"job_run_key": {
+							"value": {
+								"value": "@activity('LKP_Job_Run_Log_SAP').output.firstRow.job_run_key",
+								"type": "Expression"
+							},
+							"type": "Int64"
+						},
+						"message": {
+							"value": null,
+							"type": "String"
+						},
+						"status": {
+							"value": null,
+							"type": "Int32"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_AzureSQDb_Admin",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "SP_Job_Run_Status_Pass",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "SP_Landing_to_Staging_SAP",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[Rnd].[USP_Insert_Job_Run]",
+					"storedProcedureParameters": {
+						"Action": {
+							"value": {
+								"value": "@pipeline().parameters.action_update",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"ADF_Name": {
+							"value": {
+								"value": "@pipeline().DataFactory",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"Execution_Status": {
+							"value": {
+								"value": "@pipeline().parameters.run_status_pass",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"file_transfer_flag": {
+							"value": {
+								"value": "@variables('file_transfer_flag')",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"job_key": {
+							"value": {
+								"value": "@activity('LKP_Job_Key_SAP').output.firstRow.job_key",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"job_start_date_time": {
+							"value": {
+								"value": "@pipeline().TriggerTime",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						},
+						"last_update_date": {
+							"value": {
+								"value": "@pipeline().TriggerTime",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						},
+						"Pipeline_Name": {
+							"value": {
+								"value": "@pipeline().Pipeline",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"Pipeline_Start_Time": {
+							"value": {
+								"value": "@pipeline().TriggerTime",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						},
+						"PL_Run_ID": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_AzureSQDb_Admin",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "LKP_Job_File_Log_SAP",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "SP_Job_Run_Status_Pass",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderStoredProcedureName": "[Rnd].[USP_Job_File_Log]",
+						"storedProcedureParameters": {
+							"file_location": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.directory_landing",
+									"type": "Expression"
+								}
+							},
+							"file_name": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.filename",
+									"type": "Expression"
+								}
+							},
+							"file_size": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.file_size",
+									"type": "Expression"
+								}
+							},
+							"job_key": {
+								"type": "String",
+								"value": {
+									"value": "@activity('LKP_Job_Key_SAP').output.firstRow.job_key",
+									"type": "Expression"
+								}
+							},
+							"job_run_key": {
+								"type": "String",
+								"value": {
+									"value": "@activity('LKP_Job_Run_Log_SAP').output.firstRow.job_run_key",
+									"type": "Expression"
+								}
+							},
+							"job_file_key": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.job_file_key",
+									"type": "Expression"
+								}
+							}
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_LND_STG_ADMIN",
+						"type": "DatasetReference"
+					}
+				}
+			},
+			{
+				"name": "Execute_PL_Stg_to_Curated_SAP",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "LKP_Job_File_Log_SAP",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_Tran_SAP_File_Staging_Table_to_Curated_ADLS",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"job_run_key": {
+							"value": "@activity('LKP_Job_Run_Log_SAP').output.firstRow.job_run_key",
+							"type": "Expression"
+						},
+						"filename": {
+							"value": "@pipeline().parameters.filename",
+							"type": "Expression"
+						},
+						"file_size": {
+							"value": "@pipeline().parameters.file_size",
+							"type": "Expression"
+						},
+						"job_file_key": {
+							"value": "@activity('LKP_Job_File_Log_SAP').output.firstRow.job_file_key",
+							"type": "Expression"
+						}
+					}
+				}
+			}
+		],
+		"parameters": {
+			"schema": {
+				"type": "string",
+				"defaultValue": "ETL"
+			},
+			"table_job_control": {
+				"type": "string",
+				"defaultValue": "job_control"
+			},
+			"table_job_run_log": {
+				"type": "string",
+				"defaultValue": "job_run_log"
+			},
+			"table_job_file_log": {
+				"type": "string",
+				"defaultValue": "job_file_log"
+			},
+			"directory_raw": {
+				"type": "string",
+				"defaultValue": "Raw/RnD/SAP"
+			},
+			"filesystem_adls": {
+				"type": "string",
+				"defaultValue": "clx-datalake"
+			},
+			"directory_landing": {
+				"type": "string",
+				"defaultValue": "Landing/RnD/SAP"
+			},
+			"all_csv_files": {
+				"type": "string",
+				"defaultValue": "*.csv"
+			},
+			"schema_lnd": {
+				"type": "string",
+				"defaultValue": "tmp"
+			},
+			"table_sap": {
+				"type": "string",
+				"defaultValue": "lnd_sap_bw"
+			},
+			"action_update": {
+				"type": "string",
+				"defaultValue": "update"
+			},
+			"execution_status": {
+				"type": "string",
+				"defaultValue": "In_Progress"
+			},
+			"action_insert": {
+				"type": "string",
+				"defaultValue": "insert"
+			},
+			"run_status_pass": {
+				"type": "string",
+				"defaultValue": "Success"
+			},
+			"run_status_fail": {
+				"type": "string",
+				"defaultValue": "Failed"
+			},
+			"file_size": {
+				"type": "string"
+			},
+			"skip_line_count": {
+				"type": "int",
+				"defaultValue": 2
+			},
+			"filename": {
+				"type": "string"
+			},
+			"job_file_key": {
+				"type": "string"
+			}
+		},
+		"variables": {
+			"job_name_SAP_value": {
+				"type": "String",
+				"defaultValue": "Extract_and_Load_SAP_LZ_LT"
+			},
+			"job_name_SAP": {
+				"type": "String"
+			},
+			"job_key": {
+				"type": "String"
+			},
+			"file_transfer_flag": {
+				"type": "String",
+				"defaultValue": "Y"
+			},
+			"job_run_key": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "PL_ClOROX_SR"
+		},
+		"annotations": [],
+		"lastPublishTime": "2021-06-17T11:04:52Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

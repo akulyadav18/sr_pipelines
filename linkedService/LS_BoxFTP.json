@@ -1,0 +1,21 @@
+{
+	"name": "LS_BoxFTP",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "FtpServer",
+		"typeProperties": {
+			"host": "ftp.box.com",
+			"port": 21,
+			"enableSsl": false,
+			"enableServerCertificateValidation": false,
+			"authenticationType": "Basic",
+			"userName": "ajita.sharma@clorox.com",
+			"encryptedCredential": "eyJDcmVkZW50aWFsSWQiOiIzNWVlZmZlYS00Zjg3LTQ5YTItYmE2MS04NWU1NDQ0OTliMWIiLCJWZXJzaW9uIjoiMi4wIiwiQ2xhc3NUeXBlIjoiTWljcm9zb2Z0LkRhdGFQcm94eS5Db3JlLkludGVyU2VydmljZURhdGFDb250cmFjdC5DcmVkZW50aWFsU1UwNkNZMTQifQ=="
+		},
+		"connectVia": {
+			"referenceName": "CLX-IR-AZURE-01-Linked",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}

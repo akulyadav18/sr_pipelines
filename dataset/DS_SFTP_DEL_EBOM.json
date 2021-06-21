@@ -1,0 +1,96 @@
+{
+	"name": "DS_SFTP_DEL_EBOM",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_SFTP_Source_AFTPPL01",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"directory": {
+				"type": "string",
+				"defaultValue": "home/svcrndreporting/PLM/EBOM"
+			}
+		},
+		"folder": {
+			"name": "DS_CLOROX_SR"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "SftpLocation",
+				"folderPath": {
+					"value": "@dataset().directory",
+					"type": "Expression"
+				}
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "Prop_0",
+				"type": "String"
+			},
+			{
+				"name": "Prop_1",
+				"type": "String"
+			},
+			{
+				"name": "Prop_2",
+				"type": "String"
+			},
+			{
+				"name": "Type",
+				"type": "String"
+			},
+			{
+				"name": "Part",
+				"type": "String"
+			},
+			{
+				"name": "Rev",
+				"type": "String"
+			},
+			{
+				"name": "Description",
+				"type": "String"
+			},
+			{
+				"name": "Spec",
+				"type": "String"
+			},
+			{
+				"name": "RecyclablePlasticWeight",
+				"type": "String"
+			},
+			{
+				"name": "RecycleWeight",
+				"type": "String"
+			},
+			{
+				"name": "PackageReuseWeight",
+				"type": "String"
+			},
+			{
+				"name": "CompostableWeight",
+				"type": "String"
+			},
+			{
+				"name": "PlasticWeight",
+				"type": "String"
+			},
+			{
+				"name": "Quantity",
+				"type": "String"
+			},
+			{
+				"name": "UOM",
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,46 @@
+{
+	"name": "DS_FTP_SAP",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_BoxFTP",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"directory": {
+				"type": "string"
+			},
+			"file": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "DS_CLOROX_SR"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "FtpServerLocation",
+				"fileName": {
+					"value": "@dataset().file",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@dataset().directory",
+					"type": "Expression"
+				}
+			},
+			"columnDelimiter": ";",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "\"\"\"Customer number\"\"\"CUSTOMER:/BI0/OICUSTOMER;\"\"\"Customer Description\"\"\"CUST_DESC:/BI0/OINAME;\"\"\"Corporate - CustHier1\"\"\"CUST_HIE01:/BI0/OICUST_HIE01;\"\"\"Corp CustHier1 Description\"\"\"CUSTOMER_HIER1:/BI0/OINAME2;\"\"\"Subsidiary - CustHier2\"\"\"CUST_HIE02:/BI0/OICUST_HIE02;\"\"\"Subs CustHier2 Description\"\"\"CUSTOMER_HIER2:/BI0/OINAME3;\"\"\"Reg/Div - CustHier3\"\"\"CUST_HIE03:/BI0/OICUST_HIE03;\"\"\"reg CustHier3 Description\"\"\"CUSTOMER_HIER3:/BI0/OINAME40;\"\"\"Broker\"\"\"BROKER:/BIC/OIZBROKER;\"\"\"Broker Description\"\"\"BRKR_DESC:/BIC/OINAME5;\"\"\"Profit Center\"\"\"PROFIT_CTR:/BI0/OIPROFIT_CTR;\"\"\"Profit Center Description\"\"\"PRFT_CTR:RSTXTMD;\"\"\"Material\"\"\"MATERIAL:/BI0/OIMATERIAL;\"\"\"Material Description\"\"\"MAT_DESC:/BIC/OINAME4;\"\"\"Division\"\"\"DIVISION:/BI0/OIDIVISION;\"\"\"Material Division Description\"\"\"MAT_DIVISION:RSTXTSH;\"\"\"Global Category\"\"\"PRODH1:/BI0/OIPRODH1;\"\"\"Global Category Description\"\"\"GC_DESC:/BIC/OINAME6;\"\"\"Brand\"\"\"PRODH2:/BI0/OIPRODH2;\"\"\"Brand Description\"\"\"BRAND_DESC:/BIC/OINAME7;\"\"\"Purpose\"\"\"PRODH3:/BI0/OIPRODH3;\"\"\"Purpose Description\"\"\"PUR_DESC:/BIC/OINAME8;\"\"\"Type\"\"\"PRODH4:/BI0/OIPRODH4;\"\"\"Type Description\"\"\"TYPE_DESC:/BIC/OINAME9;\"\"\"Package Size\"\"\"PRODH5:/BI0/OIPRODH5;\"\"\"Pack Size Description\"\"\"PS_DESC:/BIC/OINAME10;\"\"\"European Article Numbers/Universal Product Code\"\"\"EANUPC:/BI0/OIEANUPC;\"\"\"Region in Sales Dept Hierarchy\"\"\"/BIC/ZSLS_REGN:/BIC/OIZSLS_REGN;\"\"\"Region Description\"\"\"REGION_DESC:/BIC/OINAME11;\"\"\"Sales Organization\"\"\"SALESORG:/BI0/OISALESORG;\"\"\"Sales Org Description\"\"\"SORG_DESC:/BIC/OINAME12;\"\"\"Trade Sector\"\"\"CUST_GRP5:/BI0/OICUST_GRP5;\"\"\"Trade Sector Description\"\"\"TSEC_DESC:/BIC/OINAME13;\"\"\"Country key\"\"\"COUNTRY:/BI0/OICOUNTRY;\"\"\"Country Description\"\"\"CTRY_DESC:/BIC/OINAME14;\"\"\"Sales Department in Sales Dept Hierarchy\"\"\"/BIC/ZSLS_DEPT:/BIC/OIZSLS_DEPT;\"\"\"Sales Department Description\"\"\"SLS_DEPT_DESC:/BIC/OINAME15;\"\"\"Sector in Sales Dept Hierarchy\"\"\"/BIC/ZSECTOR:/BIC/OIZSECTOR;\"\"\"Sector Description\"\"\"SCTR_DESC:/BIC/OINAME16;\"\"\"Controlling area\"\"\"CO_AREA:/BI0/OICO_AREA;\"\"\"Controlling Area Description\"\"\"COAREA_DESC:/BIC/OINAME17;\"\"\"Distribution Channel\"\"\"DISTR_CHAN:/BI0/OIDISTR_CHAN;\"\"\"Distribution Channel Description\"\"\"DC_DESC:/BIC/OINAME18;\"\"\"Calendar Year\"\"\"CALYEAR:/BI0/OICALYEAR;\"\"\"Calendar Year/Month\"\"\"CALMONTH:/BI0/OICALMONTH;\"\"\"Calendar Month\"\"\"CALMONTH2:/BI0/OICALMONTH2;\"\"\"Fiscal year\"\"\"FISCYEAR:/BI0/OIFISCYEAR;\"\"\"Posting period\"\"\"FISCPER3:/BI0/OIFISCPER3;\"\"\"Fiscal year variant\"\"\"FISCVARNT:/BI0/OIFISCVARNT;\"\"\"Base Unit of Measure\"\"\"BASE_UOM:/BI0/OIBASE_UOM;\"\"\"Quantity in base units of measure\"\"\"QUANT_B:/BI0/OIQUANT_B;\"\"\"Base Unit of Measure\"\"\"BASE_UOM2:/BI0/OIBASE_UOM2;\"\"\"DOS Quantity\"\"\"/BIC/ZDOS_QTY:/BIC/OIZDOS_QTY;\"\"\"Statistics Currency\"\"\"STAT_CURR:/BI0/OISTAT_CURR;\"\"\"Net value in statistics currency\"\"\"NET_VAL_S:/BI0/OINET_VAL_S",
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,554 @@
+{
+	"name": "Pl_Reuse_FTP_Adhoc_Files_Updated",
+	"properties": {
+		"activities": [
+			{
+				"name": "Copy_data_FTP_to_Landing",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "ExcelSource",
+						"storeSettings": {
+							"type": "FtpReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false,
+							"useBinaryTransfer": true
+						}
+					},
+					"sink": {
+						"type": "DelimitedTextSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "DelimitedTextWriteSettings",
+							"quoteAllText": true,
+							"fileExtension": {
+								"value": "@pipeline().parameters.file_extension",
+								"type": "Expression"
+							}
+						}
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_FTP_All_Files",
+						"type": "DatasetReference",
+						"parameters": {
+							"directory": {
+								"value": "@pipeline().parameters.directory_ftp",
+								"type": "Expression"
+							},
+							"file": {
+								"value": "@pipeline().parameters.file_name",
+								"type": "Expression"
+							},
+							"sheet_name": {
+								"value": "@pipeline().parameters.sheet",
+								"type": "Expression"
+							},
+							"range": {
+								"value": "@pipeline().parameters.range",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_ADLS_PLM_EBOM_copy2",
+						"type": "DatasetReference",
+						"parameters": {
+							"filesystem": {
+								"value": "@pipeline().parameters.filesystem_adls",
+								"type": "Expression"
+							},
+							"directory": {
+								"value": "@pipeline().parameters.directory_adhoc_files",
+								"type": "Expression"
+							},
+							"filename": {
+								"value": "@pipeline().parameters.filename_concat",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			},
+			{
+				"name": "LKP_Job_File_Log",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "Copy_data_FTP_to_Landing",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderStoredProcedureName": "[Rnd].[USP_Job_File_Log]",
+						"storedProcedureParameters": {
+							"file_location": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.file_location",
+									"type": "Expression"
+								}
+							},
+							"file_name": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.file_name",
+									"type": "Expression"
+								}
+							},
+							"file_size": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.file_size",
+									"type": "Expression"
+								}
+							},
+							"job_key": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.job_key",
+									"type": "Expression"
+								}
+							},
+							"job_run_key": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.job_run_key",
+									"type": "Expression"
+								}
+							},
+							"job_file_key": {
+								"type": "String",
+								"value": null
+							},
+							"datafactory_name": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().DataFactory",
+									"type": "Expression"
+								}
+							},
+							"pipeline_trigger_time": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().TriggerTime",
+									"type": "Expression"
+								}
+							},
+							"pipeline_trigger_id": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().TriggerId",
+									"type": "Expression"
+								}
+							},
+							"pipeline_run_id": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().RunId",
+									"type": "Expression"
+								}
+							},
+							"pipeline_name": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().Pipeline",
+									"type": "Expression"
+								}
+							}
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_LND_STG_ADMIN",
+						"type": "DatasetReference"
+					}
+				}
+			},
+			{
+				"name": "Copy_data_Landing_Temp_Table",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "LKP_Job_File_Log",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"additionalColumns": [
+							{
+								"name": "file_name",
+								"value": {
+									"value": "@pipeline().parameters.file_name",
+									"type": "Expression"
+								}
+							}
+						],
+						"storeSettings": {
+							"type": "AzureBlobStorageReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
+						}
+					},
+					"sink": {
+						"type": "AzureSqlSink",
+						"disableMetricsCollection": false
+					},
+					"enableStaging": false,
+					"enableSkipIncompatibleRow": true,
+					"logSettings": {
+						"enableCopyActivityLog": true,
+						"copyActivityLogSettings": {
+							"logLevel": "Warning",
+							"enableReliableLogging": false
+						},
+						"logLocationSettings": {
+							"linkedServiceName": {
+								"referenceName": "LS_SR_ABLB",
+								"type": "LinkedServiceReference"
+							},
+							"path": "clx-datalake/Raw/RnD/Files"
+						}
+					},
+					"translator": {
+						"value": "@json(pipeline().parameters.json_mapping)",
+						"type": "Expression"
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_ABLB_Sustainability",
+						"type": "DatasetReference",
+						"parameters": {
+							"container": {
+								"value": "@pipeline().parameters.filesystem_adls",
+								"type": "Expression"
+							},
+							"directory": {
+								"value": "@pipeline().parameters.directory_adhoc_files",
+								"type": "Expression"
+							},
+							"file": {
+								"value": "@pipeline().parameters.file_name",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_SQL_FTP_Files",
+						"type": "DatasetReference",
+						"parameters": {
+							"table": {
+								"value": "@pipeline().parameters.table_name_adhoc",
+								"type": "Expression"
+							},
+							"schema": {
+								"value": "@pipeline().parameters.schema_ftp",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			},
+			{
+				"name": "LKP_Job_File_Log_RAW_to_DB",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "Copy_data_Landing_Temp_Table",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderStoredProcedureName": "[Rnd].[USP_Job_File_Log]",
+						"storedProcedureParameters": {
+							"file_location": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.directory_ftp",
+									"type": "Expression"
+								}
+							},
+							"file_name": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.file_name",
+									"type": "Expression"
+								}
+							},
+							"file_size": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.file_size",
+									"type": "Expression"
+								}
+							},
+							"job_key": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.job_key",
+									"type": "Expression"
+								}
+							},
+							"job_run_key": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.job_run_key",
+									"type": "Expression"
+								}
+							},
+							"job_file_key": {
+								"type": "String",
+								"value": {
+									"value": "@activity('LKP_Job_File_Log').output.firstRow.job_file_key",
+									"type": "Expression"
+								}
+							},
+							"datafactory_name": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().DataFactory",
+									"type": "Expression"
+								}
+							},
+							"pipeline_trigger_time": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().TriggerTime",
+									"type": "Expression"
+								}
+							},
+							"pipeline_trigger_id": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().TriggerId",
+									"type": "Expression"
+								}
+							},
+							"pipeline_name": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().Pipeline",
+									"type": "Expression"
+								}
+							},
+							"pipeline_run_id": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().RunId",
+									"type": "Expression"
+								}
+							}
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_LND_STG_ADMIN",
+						"type": "DatasetReference"
+					}
+				}
+			},
+			{
+				"name": "SP_Temp_Table_to_Rnd",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "LKP_Job_File_Log_RAW_to_DB",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": {
+						"value": "@pipeline().parameters.stored_procedure",
+						"type": "Expression"
+					},
+					"storedProcedureParameters": {
+						"file_name": {
+							"value": {
+								"value": "@pipeline().parameters.file_name",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"job_key": {
+							"value": {
+								"value": "@pipeline().parameters.job_key",
+								"type": "Expression"
+							},
+							"type": "Int64"
+						},
+						"job_run_key": {
+							"value": {
+								"value": "@pipeline().parameters.job_run_key",
+								"type": "Expression"
+							},
+							"type": "Int64"
+						},
+						"message": {
+							"value": null,
+							"type": "String"
+						},
+						"status": {
+							"value": null,
+							"type": "Int32"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_AzureSQDb_Admin",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"parameters": {
+			"file_location": {
+				"type": "string"
+			},
+			"file_name": {
+				"type": "string"
+			},
+			"file_size": {
+				"type": "string"
+			},
+			"job_key": {
+				"type": "string"
+			},
+			"job_run_key": {
+				"type": "string"
+			},
+			"directory_ftp": {
+				"type": "string"
+			},
+			"sheet": {
+				"type": "string"
+			},
+			"range": {
+				"type": "string"
+			},
+			"filesystem_adls": {
+				"type": "string"
+			},
+			"directory_adhoc_files": {
+				"type": "string"
+			},
+			"file_name_concat": {
+				"type": "string"
+			},
+			"table_name_adhoc": {
+				"type": "string"
+			},
+			"schema_ftp": {
+				"type": "string"
+			},
+			"json_mapping": {
+				"type": "string"
+			},
+			"schema": {
+				"type": "string"
+			},
+			"table_job_run_log": {
+				"type": "string"
+			},
+			"table_job_file_log": {
+				"type": "string"
+			},
+			"table_job_control": {
+				"type": "string"
+			},
+			"stored_procedure": {
+				"type": "string"
+			},
+			"filename_concat": {
+				"type": "string"
+			},
+			"file_extension": {
+				"type": "string"
+			},
+			"additional_file_name": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "Reusable Pipeline"
+		},
+		"annotations": [],
+		"lastPublishTime": "2021-06-18T13:55:34Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
