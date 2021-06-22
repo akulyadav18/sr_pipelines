@@ -149,26 +149,6 @@
 									"type": "DelimitedTextReadSettings"
 								}
 							}
-						},
-						{
-							"name": "Execute_Fail_Alert_PLM",
-							"type": "ExecutePipeline",
-							"dependsOn": [
-								{
-									"activity": "Execute_PL_Data_to_Log_Tables",
-									"dependencyConditions": [
-										"Failed"
-									]
-								}
-							],
-							"userProperties": [],
-							"typeProperties": {
-								"pipeline": {
-									"referenceName": "PL_email",
-									"type": "PipelineReference"
-								},
-								"waitOnCompletion": true
-							}
 						}
 					]
 				}
@@ -189,7 +169,7 @@
 			"name": "PL_ClOROX_SR"
 		},
 		"annotations": [],
-		"lastPublishTime": "2021-06-18T14:12:22Z"
+		"lastPublishTime": "2021-06-22T08:12:50Z"
 	},
 	"type": "Microsoft.DataFactory/factories/pipelines"
 }

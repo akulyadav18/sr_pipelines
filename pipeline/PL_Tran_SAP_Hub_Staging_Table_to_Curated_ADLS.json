@@ -910,46 +910,11 @@
 				}
 			},
 			{
-				"name": "LKP_Update_Records_In_Run_Log",
-				"type": "Lookup",
-				"dependsOn": [
-					{
-						"activity": "Copy_from_Stg_to_Curated",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"policy": {
-					"timeout": "7.00:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"source": {
-						"type": "AzureSqlSource",
-						"sqlReaderQuery": {
-							"value": "@concat('Update ' ,pipeline().parameters.schema,'.',pipeline().parameters.table_job_run_log, ' set records_copied = ' , activity('Copy_from_Stg_to_Curated').output.rowsCopied ,  ',' ,  ' records_read = ' , activity('Copy_from_Stg_to_Curated').output.rowsRead , ' where  job_key = ' , activity('LKP_Job_Key_SAP').output.firstRow.job_key, ' and job_run_key =' , pipeline().parameters.job_run_key, ';select 0 as DummyValue;')",
-							"type": "Expression"
-						},
-						"queryTimeout": "02:00:00",
-						"partitionOption": "None"
-					},
-					"dataset": {
-						"referenceName": "DS_LND_STG_ADMIN",
-						"type": "DatasetReference"
-					}
-				}
-			},
-			{
 				"name": "SP_Job_Run_Status_SAP",
 				"type": "SqlServerStoredProcedure",
 				"dependsOn": [
 					{
-						"activity": "LKP_Update_Records_In_Run_Log",
+						"activity": "Copy_from_Stg_to_Curated",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -1108,6 +1073,41 @@
 									"value": "@pipeline().parameters.job_file_key",
 									"type": "Expression"
 								}
+							},
+							"datafactory_name": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().DataFactory",
+									"type": "Expression"
+								}
+							},
+							"pipeline_trigger_time": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().TriggerTime",
+									"type": "Expression"
+								}
+							},
+							"pipeline_trigger_id": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().TriggerId",
+									"type": "Expression"
+								}
+							},
+							"pipeline_run_id": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().RunId",
+									"type": "Expression"
+								}
+							},
+							"pipeline_name": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().Pipeline",
+									"type": "Expression"
+								}
 							}
 						},
 						"queryTimeout": "02:00:00",
@@ -1244,7 +1244,7 @@
 			"name": "PL_ClOROX_SR"
 		},
 		"annotations": [],
-		"lastPublishTime": "2021-06-17T11:04:52Z"
+		"lastPublishTime": "2021-06-22T08:14:29Z"
 	},
 	"type": "Microsoft.DataFactory/factories/pipelines"
 }

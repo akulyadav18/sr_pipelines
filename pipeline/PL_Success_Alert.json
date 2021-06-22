@@ -1,0 +1,46 @@
+{
+	"name": "PL_Success_Alert",
+	"properties": {
+		"activities": [
+			{
+				"name": "Web1",
+				"type": "WebActivity",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"url": {
+						"value": "@pipeline().globalParameters.Success_Mail_url",
+						"type": "Expression"
+					},
+					"connectVia": {
+						"referenceName": "AutoResolveIntegrationRuntime",
+						"type": "IntegrationRuntimeReference"
+					},
+					"method": "POST",
+					"body": {
+						"value": "{\n \"Project\" : \"@{pipeline().globalParameters.project_name}\",\n \"Module Name\" : \"pipeline().parameters.job_name\",\n \"Environment\" : \"@{pipeline().globalParameters.environment}\",\n \"Title\":\"Pipeline Execution Successfull\",\n \"Pipeline Run ID\" : \"@{pipeline().RunId}\",\n \"Pipeline Trigger ID\" : \"@{pipeline().TriggerId}\",\n \"Pipeline Name\" : \"@{pipeline().Pipeline}\",\n \"Data Factory Name \" : \"@{pipeline().DataFactory}\",\n \"Pipeline Trigger Time\" :\"@{pipeline().TriggerTime}\",\n \"Pipeline Failure Time\" : \"@{utcnow()}\",\n \"Recipients\" : \"@{pipeline().globalParameters.mail_notification_recipient}\",\n}",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"job_name": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "PL_ClOROX_SR"
+		},
+		"annotations": [],
+		"lastPublishTime": "2021-06-22T08:09:03Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

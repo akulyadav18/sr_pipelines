@@ -567,7 +567,7 @@
 			"name": "Reusable Pipeline"
 		},
 		"annotations": [],
-		"lastPublishTime": "2021-06-17T12:57:50Z"
+		"lastPublishTime": "2021-06-22T08:14:29Z"
 	},
 	"type": "Microsoft.DataFactory/factories/pipelines"
 }

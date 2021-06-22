@@ -124,7 +124,7 @@
 					},
 					"method": "POST",
 					"body": {
-						"value": "{\n \"Project\" : \"@{pipeline().globalParameters.project_name}\",\n \"Module Name\" : \"pipeline().parameters.job_name\",\n \"Environment\" : \"@{pipeline().globalParameters.environment}\",\n \"Title\":\"Pipeline Execution Failed\",\n \"Pipeline Run ID\" : \"@{pipeline().RunId}\",\n \"Pipeline Trigger ID\" : \"@{pipeline().TriggerId}\",\n \"Pipeline Name\" : \"@{pipeline().Pipeline}\",\n \"Data Factory Name \" : \"@{pipeline().DataFactory}\",\n \"Pipeline Trigger Time\" :\"@{pipeline().TriggerTime}\",\n \"Pipeline Failure Time\" : \"@{utcnow()}\",\n \"Recipients\" : \"@{pipeline().globalParameters.mail_notification_recipient}\",\n}",
+						"value": "{\n \"Project\" : \"@{pipeline().globalParameters.project_name}\",\n \"Module Name\" : \"pipeline().parameters.job_name\",\n \"Environment\" : \"@{pipeline().globalParameters.environment}\",\n \"Title\":\"pipeline().parameters.Title\",\n \"Pipeline Run ID\" : \"@{pipeline().RunId}\",\n \"Pipeline Trigger ID\" : \"@{pipeline().TriggerId}\",\n \"Pipeline Name\" : \"@{pipeline().Pipeline}\",\n \"Data Factory Name \" : \"@{pipeline().DataFactory}\",\n \"Pipeline Trigger Time\" :\"@{pipeline().TriggerTime}\",\n \"Pipeline Failure Time\" : \"@{utcnow()}\",\n \"Recipients\" : \"@{pipeline().globalParameters.mail_notification_recipient}\",\n}",
 						"type": "Expression"
 					}
 				}
@@ -152,13 +152,16 @@
 			},
 			"job_name": {
 				"type": "string"
+			},
+			"Title": {
+				"type": "string"
 			}
 		},
 		"folder": {
 			"name": "PL_ClOROX_SR"
 		},
 		"annotations": [],
-		"lastPublishTime": "2021-06-17T11:04:51Z"
+		"lastPublishTime": "2021-06-22T08:14:29Z"
 	},
 	"type": "Microsoft.DataFactory/factories/pipelines"
 }

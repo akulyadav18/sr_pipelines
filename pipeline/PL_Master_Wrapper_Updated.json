@@ -1,5 +1,5 @@
 {
-	"name": "PL_Master_Wrapper",
+	"name": "PL_Master_Wrapper_Updated",
 	"properties": {
 		"activities": [
 			{
@@ -9,7 +9,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"pipeline": {
-						"referenceName": "PL_Data_PLM_Files_SFTP_to_ADLS",
+						"referenceName": "PL_Data_PLM_Files_SFTP_to_ADLS_updated",
 						"type": "PipelineReference"
 					},
 					"waitOnCompletion": true
@@ -29,7 +29,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"pipeline": {
-						"referenceName": "PL_Data_SAP_File_FTP_to_ADLS",
+						"referenceName": "PL_Data_SAP_File_FTP_to_ADLS_updated",
 						"type": "PipelineReference"
 					},
 					"waitOnCompletion": true
@@ -49,7 +49,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"pipeline": {
-						"referenceName": "PL_Data_Adhoc_Files_FTP_to_ADLS",
+						"referenceName": "PL_Data_Adhoc_Files_FTP_to_ADLS_updated",
 						"type": "PipelineReference"
 					},
 					"waitOnCompletion": true
@@ -96,7 +96,17 @@
 						"referenceName": "PL_Fail_Alert",
 						"type": "PipelineReference"
 					},
-					"waitOnCompletion": true
+					"waitOnCompletion": true,
+					"parameters": {
+						"job_key": {
+							"value": "@pipeline().parameters.job_key",
+							"type": "Expression"
+						},
+						"job_name": {
+							"value": "@pipeline().parameters.job_name",
+							"type": "Expression"
+						}
+					}
 				}
 			},
 			{
@@ -113,7 +123,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"pipeline": {
-						"referenceName": "PL_Data_Material_Type_SFTP_to_ADLS_to_DB",
+						"referenceName": "PL_Data_Material_Type_SFTP_to_ADLS_to_DB_updated",
 						"type": "PipelineReference"
 					},
 					"waitOnCompletion": true
@@ -156,10 +166,26 @@
 						"referenceName": "PL_Success_Alert",
 						"type": "PipelineReference"
 					},
-					"waitOnCompletion": true
+					"waitOnCompletion": true,
+					"parameters": {
+						"job_name": {
+							"value": "@pipeline().parameters.job_name",
+							"type": "Expression"
+						}
+					}
 				}
 			}
 		],
+		"parameters": {
+			"job_key": {
+				"type": "string",
+				"defaultValue": "100"
+			},
+			"job_name": {
+				"type": "string",
+				"defaultValue": "Master Pipeline"
+			}
+		},
 		"folder": {
 			"name": "PL_ClOROX_SR"
 		},

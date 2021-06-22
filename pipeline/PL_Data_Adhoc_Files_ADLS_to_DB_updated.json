@@ -47,7 +47,7 @@
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "PL_email",
+									"referenceName": "PL_Fail_Alert",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": true
@@ -1693,7 +1693,7 @@
 			"name": "PL_ClOROX_SR"
 		},
 		"annotations": [],
-		"lastPublishTime": "2021-06-18T14:14:29Z"
+		"lastPublishTime": "2021-06-22T08:14:30Z"
 	},
 	"type": "Microsoft.DataFactory/factories/pipelines"
 }
